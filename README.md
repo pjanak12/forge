@@ -23,6 +23,7 @@ Forge is a gym tracker that runs on your phone and stores everything on it. It's
 - Muscle map (balance, fatigue, strength), monthly challenges, neglected-muscle nudges, structural balance, e1RM charts, heatmap and badges.
 - **Body composition**: log smart-scale or body-composition scan readings (body fat, muscle, visceral fat, water, BMR, metabolic age…) with a photo of the printout, and see the changes and charts. BMI is calculated from your height.
 - Backup, restore and merge; CSV export; import from Strong, Hevy and FitNotes.
+- Original pictogram icon set (no emojis), smooth page transitions, springy sheets, set-complete animations and PR confetti. Animations switch off automatically if the phone's "Reduce Motion" setting is on.
 - Adjustable text size, themes, accent colours, kg/lb.
 
 ## Deploy to GitHub Pages (free, about 3 minutes)
@@ -71,6 +72,7 @@ Forge is plain HTML/CSS/JS with no build step and no dependencies:
 | `app.css` | All styles (CSS variables at the top for theming) |
 | `app.js` | App logic, storage, views |
 | `data.js` | Exercise library, movement patterns, safety cues, techniques, injury rules |
+| `icons.js` | Original icon set (SVG, drawn for Forge) |
 | `guide.js` + `img/` | Exercise photos and step-by-step instructions (public domain, [Free Exercise DB](https://github.com/yuhonas/free-exercise-db)) |
 | `sw.js` | Offline cache |
 | `manifest.webmanifest` | Install metadata and icons |
