@@ -1,6 +1,6 @@
 /* Built-in exercise library.
    Row format: [name, primary muscle, secondary muscles (comma list), equipment, type]
-   type: weight | bodyweight | assisted | timed | cardio */
+   type: weight | bodyweight | assisted | timed | cardio | mobility (warm-up/stretch: not counted in stats) */
 window.MUSCLES = {
   chest: 'Chest', lats: 'Lats', upperback: 'Upper back', traps: 'Traps',
   frontdelts: 'Front delts', sidedelts: 'Side delts', reardelts: 'Rear delts',
@@ -12,7 +12,7 @@ window.MUSCLES = {
 window.EQUIPMENT = {
   barbell: 'Barbell', dumbbell: 'Dumbbell', machine: 'Machine', cable: 'Cable',
   bodyweight: 'Body weight', kettlebell: 'Kettlebell', band: 'Band', smith: 'Smith machine',
-  ezbar: 'EZ bar', trapbar: 'Trap bar', pullupbar: 'Pull-up bar', cardio: 'Cardio machine', other: 'Other'
+  ezbar: 'EZ bar', trapbar: 'Trap bar', pullupbar: 'Pull-up bar', cardio: 'Cardio machine', landmine: 'Landmine', other: 'Other'
 };
 window.EXERCISE_ROWS = [
   // Chest
@@ -161,7 +161,70 @@ window.EXERCISE_ROWS = [
   ['Assault Bike', 'cardio', 'quads', 'cardio', 'cardio'],
   ['Jump Rope', 'cardio', 'calves', 'other', 'cardio'],
   ['Swimming', 'cardio', 'lats', 'other', 'cardio'],
-  ['Sled Push', 'quads', 'glutes,calves', 'other', 'timed']
+  ['Sled Push', 'quads', 'glutes,calves', 'other', 'timed'],
+  // Landmine
+  ['Landmine Press', 'frontdelts', 'chest,triceps,abs', 'landmine', 'weight'],
+  ['Landmine Squat', 'quads', 'glutes,abs', 'landmine', 'weight'],
+  ['Landmine Row', 'upperback', 'lats,biceps', 'landmine', 'weight'],
+  ['Landmine Rotation', 'obliques', 'abs,frontdelts', 'landmine', 'weight'],
+  ['Landmine Romanian Deadlift', 'hamstrings', 'glutes,lowerback', 'landmine', 'weight'],
+  ['Landmine Reverse Lunge', 'glutes', 'quads,hamstrings', 'landmine', 'weight'],
+  ['Landmine Thruster', 'quads', 'frontdelts,triceps,glutes', 'landmine', 'weight'],
+  ['Landmine Anti-Rotation Press', 'obliques', 'abs,frontdelts', 'landmine', 'weight'],
+  // More core
+  ['Mountain Climber', 'abs', 'frontdelts,quads', 'bodyweight', 'timed'],
+  ['Bicycle Crunch', 'obliques', 'abs', 'bodyweight', 'bodyweight'],
+  ['V-Up', 'abs', '', 'bodyweight', 'bodyweight'],
+  ['Flutter Kicks', 'abs', '', 'bodyweight', 'timed'],
+  ['Bird Dog', 'lowerback', 'abs,glutes', 'bodyweight', 'bodyweight'],
+  ['Suitcase Carry', 'obliques', 'forearms,traps', 'dumbbell', 'timed'],
+  ['Toes-to-Bar', 'abs', 'lats,forearms', 'pullupbar', 'bodyweight'],
+  ['Dragon Flag', 'abs', 'lowerback', 'bodyweight', 'bodyweight'],
+  ['Plank Shoulder Tap', 'abs', 'obliques,frontdelts', 'bodyweight', 'bodyweight'],
+  ['Bear Crawl', 'abs', 'frontdelts,quads', 'bodyweight', 'timed'],
+  ['Side Plank Hip Dip', 'obliques', 'abs', 'bodyweight', 'bodyweight'],
+  ['Stir the Pot', 'abs', 'obliques', 'other', 'timed'],
+  ['Dumbbell Side Bend', 'obliques', '', 'dumbbell', 'weight'],
+  ['Superman Hold', 'lowerback', 'glutes', 'bodyweight', 'timed'],
+  // Conditioning / HIIT
+  ['Burpee', 'cardio', 'chest,quads,abs', 'bodyweight', 'bodyweight'],
+  ['High Knees', 'cardio', 'quads,abs', 'bodyweight', 'timed'],
+  ['Squat Jump', 'quads', 'glutes,calves', 'bodyweight', 'bodyweight'],
+  ['Jump Lunge', 'quads', 'glutes,calves', 'bodyweight', 'bodyweight'],
+  ['Skater Jumps', 'glutes', 'quads,calves', 'bodyweight', 'timed'],
+  ['Box Jump', 'quads', 'glutes,calves', 'other', 'bodyweight'],
+  ['Battle Ropes', 'cardio', 'frontdelts,forearms,abs', 'other', 'timed'],
+  ['Shadow Boxing', 'cardio', 'frontdelts,obliques', 'bodyweight', 'timed'],
+  ['Sprint Intervals', 'cardio', 'quads,hamstrings,glutes', 'cardio', 'cardio'],
+  ['Kettlebell Goblet Clean', 'glutes', 'hamstrings,biceps', 'kettlebell', 'weight'],
+  // Warm-up / mobility (not counted in training stats)
+  ['Jumping Jacks', 'cardio', 'calves,sidedelts', 'bodyweight', 'mobility'],
+  ['Arm Circles', 'sidedelts', 'frontdelts,reardelts', 'bodyweight', 'mobility'],
+  ['Band Dislocates', 'reardelts', 'frontdelts,chest', 'band', 'mobility'],
+  ['Cat-Cow', 'lowerback', 'abs', 'bodyweight', 'mobility'],
+  ["World's Greatest Stretch", 'glutes', 'hamstrings,adductors,upperback', 'bodyweight', 'mobility'],
+  ['Leg Swings', 'glutes', 'hamstrings,adductors', 'bodyweight', 'mobility'],
+  ['Hip Circles', 'glutes', 'adductors', 'bodyweight', 'mobility'],
+  ['Thoracic Rotation', 'upperback', 'obliques', 'bodyweight', 'mobility'],
+  ['Inchworm', 'hamstrings', 'abs,frontdelts', 'bodyweight', 'mobility'],
+  ['Scapular Pull-Up', 'upperback', 'lats', 'pullupbar', 'mobility'],
+  ['Ankle Circles', 'calves', '', 'bodyweight', 'mobility'],
+  ['Glute Bridge March', 'glutes', 'abs', 'bodyweight', 'mobility'],
+  // Cool-down stretches
+  ["Child's Pose", 'lats', 'lowerback', 'bodyweight', 'mobility'],
+  ['Pigeon Stretch', 'glutes', '', 'bodyweight', 'mobility'],
+  ['Standing Hamstring Stretch', 'hamstrings', 'calves', 'bodyweight', 'mobility'],
+  ['Standing Quad Stretch', 'quads', '', 'bodyweight', 'mobility'],
+  ['Kneeling Hip Flexor Stretch', 'quads', 'abs', 'bodyweight', 'mobility'],
+  ['Doorway Chest Stretch', 'chest', 'frontdelts', 'bodyweight', 'mobility'],
+  ['Cross-Body Shoulder Stretch', 'reardelts', '', 'bodyweight', 'mobility'],
+  ['Overhead Triceps Stretch', 'triceps', 'lats', 'bodyweight', 'mobility'],
+  ['Wall Calf Stretch', 'calves', '', 'bodyweight', 'mobility'],
+  ['Cobra Stretch', 'abs', 'lowerback', 'bodyweight', 'mobility'],
+  ['Figure-4 Glute Stretch', 'glutes', 'lowerback', 'bodyweight', 'mobility'],
+  ['Supine Spinal Twist', 'obliques', 'lowerback', 'bodyweight', 'mobility'],
+  ['Butterfly Stretch', 'adductors', '', 'bodyweight', 'mobility'],
+  ['Standing Side Stretch', 'lats', 'obliques', 'bodyweight', 'mobility']
 ];
 
 /* Structural balance: expected strength relative to Back Squat = 100. */
@@ -177,3 +240,203 @@ window.BALANCE_TARGETS = [
   { name: 'Romanian Deadlift', ratio: 0.80 },
   { name: 'Power Clean', ratio: 0.68 }
 ];
+
+/* Movement patterns: exercises in the same pattern can replace each other when the
+   routine is rotated (only swapped with the same logging type). */
+window.PATTERNS = {
+  hpush: ['Bench Press', 'Incline Bench Press', 'Decline Bench Press', 'Paused Bench Press', 'Dumbbell Bench Press', 'Incline Dumbbell Press', 'Machine Chest Press', 'Smith Incline Press', 'Weighted Push-Up', 'Weighted Dip', 'Push-Up', 'Chest Dip', 'Assisted Dip'],
+  chestfly: ['Dumbbell Fly', 'Incline Dumbbell Fly', 'Cable Crossover', 'Low-to-High Cable Fly', 'Pec Deck'],
+  vpush: ['Overhead Press', 'Push Press', 'Seated Dumbbell Press', 'Arnold Press', 'Machine Shoulder Press', 'Landmine Press', 'Handstand Push-Up'],
+  latraise: ['Lateral Raise', 'Cable Lateral Raise', 'Machine Lateral Raise', 'Upright Row'],
+  reardelt: ['Rear Delt Fly', 'Reverse Pec Deck', 'Face Pull', 'Band Pull-Apart'],
+  hpull: ['Barbell Row', 'Pendlay Row', 'T-Bar Row', 'One-Arm Dumbbell Row', 'Chest-Supported Row', 'Seated Cable Row', 'Machine Row', 'Landmine Row', 'Inverted Row'],
+  vpull: ['Lat Pulldown', 'Close-Grip Lat Pulldown', 'Straight-Arm Pulldown', 'Weighted Pull-Up', 'Weighted Chin-Up', 'Pull-Up', 'Chin-Up', 'Assisted Pull-Up'],
+  squat: ['Back Squat', 'Front Squat', 'Paused Squat', 'Box Squat', 'Goblet Squat', 'Hack Squat', 'Smith Squat', 'Leg Press', 'Landmine Squat', 'Bodyweight Squat', 'Pistol Squat', 'Squat Jump'],
+  hinge: ['Deadlift', 'Sumo Deadlift', 'Trap Bar Deadlift', 'Romanian Deadlift', 'Dumbbell Romanian Deadlift', 'Stiff-Leg Deadlift', 'Good Morning', 'Landmine Romanian Deadlift', 'Rack Pull'],
+  lunge: ['Bulgarian Split Squat', 'Walking Lunge', 'Reverse Lunge', 'Step-Up', 'Landmine Reverse Lunge', 'Jump Lunge'],
+  kneeflex: ['Lying Leg Curl', 'Seated Leg Curl', 'Nordic Curl'],
+  glute: ['Hip Thrust', 'Cable Pull-Through', 'Kettlebell Swing', 'Hip Abduction Machine', 'Glute Bridge', 'Back Extension'],
+  calf: ['Standing Calf Raise', 'Seated Calf Raise', 'Leg Press Calf Raise', 'Single-Leg Calf Raise'],
+  biceps: ['Barbell Curl', 'EZ-Bar Curl', 'Dumbbell Curl', 'Hammer Curl', 'Incline Dumbbell Curl', 'Preacher Curl', 'Cable Curl', 'Concentration Curl', 'Spider Curl'],
+  triceps: ['Triceps Pushdown', 'Rope Pushdown', 'Overhead Cable Extension', 'Skull Crusher', 'Overhead Dumbbell Extension', 'Dumbbell Kickback', 'Close-Grip Bench Press', 'Bench Dip', 'Diamond Push-Up'],
+  traps: ['Barbell Shrug', 'Dumbbell Shrug'],
+  forearm: ['Wrist Curl', 'Reverse Wrist Curl', 'Reverse Curl'],
+  coreflex: ['Crunch', 'Hanging Leg Raise', 'Hanging Knee Raise', 'Decline Sit-Up', 'V-Up', 'Toes-to-Bar', 'Dragon Flag', 'Ab Wheel Rollout', 'Bicycle Crunch', 'Plank Shoulder Tap', 'Dead Bug', 'Bird Dog', 'Side Plank Hip Dip', 'Burpee', 'Box Jump'],
+  coreweighted: ['Cable Crunch', 'Pallof Press', 'Woodchopper', 'Landmine Rotation', 'Landmine Anti-Rotation Press', 'Dumbbell Side Bend'],
+  corehold: ['Plank', 'Side Plank', 'Hollow Hold', 'L-Sit', 'Mountain Climber', 'Flutter Kicks', 'Bear Crawl', 'Stir the Pot', 'Superman Hold', 'Copenhagen Plank'],
+  carry: ["Farmer's Carry", 'Suitcase Carry'],
+  hiit: ['High Knees', 'Skater Jumps', 'Battle Ropes', 'Shadow Boxing', 'Sled Push'],
+  cardio: ['Treadmill Run', 'Incline Treadmill Walk', 'Outdoor Run', 'Stationary Bike', 'Rowing Machine', 'Elliptical', 'Stair Climber', 'Assault Bike', 'Jump Rope', 'Swimming', 'Sprint Intervals']
+};
+
+/* Safety & form cues per movement pattern (shown in each exercise's guide). */
+window.SAFETY = {
+  hpush: ['Pull your shoulder blades back and down and keep them pinned — it protects the shoulders.', 'Lower under control to the chest; elbows roughly 45–70° from the body, not flared to 90°.', 'Keep feet planted and wrists stacked over elbows. Use safeties or a spotter when going heavy.'],
+  chestfly: ['Keep a soft, fixed bend in the elbows — the movement is at the shoulder, not the elbow.', 'Only lower as far as feels comfortable in the front of the shoulder; a deep stretch with heavy weight is a common injury.'],
+  vpush: ['Squeeze glutes and brace your abs so you press with the shoulders, not by arching the lower back.', 'Press slightly back so the weight finishes over the middle of your foot, head "through the window".'],
+  latraise: ['Lead with the elbows, lift to about shoulder height and keep a slight forward lean.', 'Light weight, no swinging — momentum moves the load off the delts.'],
+  reardelt: ['Keep the shoulders down away from the ears; think "pull apart", not "shrug".', 'Pause briefly at the back and control the return.'],
+  hpull: ['Hinge with a neutral (flat) back and brace before every rep.', 'Pull the elbows toward the hips and squeeze the shoulder blades together; avoid jerking with the lower back.'],
+  vpull: ['Start each rep by pulling the shoulders down, then drive elbows toward the ribs.', 'Avoid kipping or swinging; control the lowering phase to a full stretch.'],
+  squat: ['Brace hard (big breath into the belly) before each rep and keep it until you stand up.', 'Knees track over the toes; keep the whole foot on the floor.', 'Squat to the depth you can control with a neutral spine. Always set safety bars for heavy barbell work.'],
+  hinge: ['Push the hips back and keep the bar or weights close to your legs.', 'Back stays neutral — if it rounds, the weight is too heavy or the range too deep.', 'Lock out by squeezing the glutes, not by leaning back.'],
+  lunge: ['Keep the front knee tracking over the middle of the foot.', 'Stay tall through the torso; a slight forward lean is fine. Use a wall or rack for balance at first.'],
+  kneeflex: ['Keep the hips pressed into the pad, don’t let them lift.', 'Control the lowering — that’s where hamstrings grow and where cramps/strains happen if rushed.'],
+  glute: ['Finish by squeezing the glutes with ribs down — don’t hyperextend the lower back.', 'Tuck the chin slightly and keep shins vertical at the top of hip thrusts.'],
+  calf: ['Use a full range: deep stretch at the bottom, pause, then rise high onto the big toe.', 'No bouncing — the Achilles tendon doesn’t like it.'],
+  biceps: ['Keep the elbows still at your sides; if you have to swing, the weight is too heavy.', 'Lower slowly to full extension.'],
+  triceps: ['Keep the upper arms still and elbows pointing where they started.', 'If elbows ache, switch to a rope or dumbbells and use a neutral grip.'],
+  traps: ['Lift straight up, hold for a second, lower slowly. Don’t roll the shoulders.'],
+  forearm: ['Use light weight and a full, slow range of motion.'],
+  coreflex: ['Curl the ribs toward the pelvis; avoid yanking on the neck or using momentum.', 'Exhale as you crunch. Stop if you feel it in the lower back rather than the abs.'],
+  coreweighted: ['Brace the core and let the movement come from the trunk, keeping hips square unless the exercise says otherwise.', 'Start light: rotational strength builds quickly, and twisting injuries are common with heavy, fast reps.'],
+  corehold: ['Make a straight line from head to heels; squeeze glutes, ribs down.', 'Stop the set when the position breaks (hips sag or pike) — form beats time.'],
+  carry: ['Stand tall, shoulders down, short quick steps. Don’t lean to one side.'],
+  hiit: ['Warm up first, land softly, and stop if form gets sloppy. Quality beats quantity.'],
+  cardio: ['Start easy for 5 minutes. For steady "zone 2", you should still be able to talk in full sentences.'],
+  mobility: ['Move slowly and breathe. Stretch to mild tension — never pain.', 'Hold static stretches 20–45 s. Before lifting, prefer dynamic movement over long static holds.']
+};
+window.SAFETY_GENERAL = ['Warm up with a few lighter sets before your working weight.', 'Pain that is sharp, in a joint, or gets worse during a set = stop. Muscle burn is fine; joint pain is not.'];
+
+/* Images & step-by-step instructions come from the public-domain Free Exercise DB
+   (github.com/yuhonas/free-exercise-db, Unlicense). Map our names to theirs. */
+window.FX_MAP = {
+  'Bench Press': 'Barbell Bench Press - Medium Grip', 'Incline Bench Press': 'Barbell Incline Bench Press - Medium Grip', 'Decline Bench Press': 'Decline Barbell Bench Press',
+  'Close-Grip Bench Press': 'Close-Grip Barbell Bench Press', 'Paused Bench Press': 'Barbell Bench Press - Medium Grip', 'Dumbbell Bench Press': 'Dumbbell Bench Press',
+  'Incline Dumbbell Press': 'Incline Dumbbell Press', 'Dumbbell Fly': 'Dumbbell Flyes', 'Incline Dumbbell Fly': 'Incline Dumbbell Flyes', 'Cable Crossover': 'Cable Crossover',
+  'Low-to-High Cable Fly': 'Incline Cable Flye', 'Pec Deck': 'Butterfly', 'Machine Chest Press': 'Leverage Chest Press', 'Smith Incline Press': 'Smith Machine Incline Bench Press',
+  'Push-Up': 'Pushups', 'Weighted Push-Up': 'Pushups', 'Chest Dip': 'Dips - Chest Version', 'Weighted Dip': 'Dips - Chest Version', 'Assisted Dip': 'Dip Machine',
+  'Deadlift': 'Barbell Deadlift', 'Sumo Deadlift': 'Sumo Deadlift', 'Trap Bar Deadlift': 'Trap Bar Deadlift', 'Rack Pull': 'Rack Pulls', 'Barbell Row': 'Bent Over Barbell Row',
+  'Pendlay Row': 'Bent Over Barbell Row', 'T-Bar Row': 'T-Bar Row with Handle', 'One-Arm Dumbbell Row': 'One-Arm Dumbbell Row', 'Chest-Supported Row': 'Dumbbell Incline Row',
+  'Seated Cable Row': 'Seated Cable Rows', 'Machine Row': 'Leverage Iso Row', 'Lat Pulldown': 'Wide-Grip Lat Pulldown', 'Close-Grip Lat Pulldown': 'Close-Grip Front Lat Pulldown',
+  'Straight-Arm Pulldown': 'Straight-Arm Pulldown', 'Pull-Up': 'Pullups', 'Chin-Up': 'Chin-Up', 'Weighted Pull-Up': 'Weighted Pull Ups', 'Weighted Chin-Up': 'Chin-Up',
+  'Assisted Pull-Up': 'Band Assisted Pull-Up', 'Inverted Row': 'Inverted Row', 'Barbell Shrug': 'Barbell Shrug', 'Dumbbell Shrug': 'Dumbbell Shrug',
+  'Back Extension': 'Hyperextensions (Back Extensions)', 'Good Morning': 'Good Morning', 'Overhead Press': 'Standing Military Press', 'Push Press': 'Push Press',
+  'Seated Dumbbell Press': 'Seated Dumbbell Press', 'Arnold Press': 'Arnold Dumbbell Press', 'Machine Shoulder Press': 'Leverage Shoulder Press', 'Lateral Raise': 'Side Lateral Raise',
+  'Cable Lateral Raise': 'Cable Seated Lateral Raise', 'Machine Lateral Raise': 'Side Lateral Raise', 'Front Raise': 'Front Dumbbell Raise', 'Rear Delt Fly': 'Reverse Flyes',
+  'Reverse Pec Deck': 'Reverse Machine Flyes', 'Face Pull': 'Face Pull', 'Upright Row': 'Upright Barbell Row', 'Band Pull-Apart': 'Band Pull Apart', 'Handstand Push-Up': 'Handstand Push-Ups',
+  'Barbell Curl': 'Barbell Curl', 'EZ-Bar Curl': 'EZ-Bar Curl', 'Dumbbell Curl': 'Dumbbell Bicep Curl', 'Hammer Curl': 'Hammer Curls', 'Incline Dumbbell Curl': 'Incline Dumbbell Curl',
+  'Preacher Curl': 'Preacher Curl', 'Cable Curl': 'Standing Biceps Cable Curl', 'Concentration Curl': 'Concentration Curls', 'Spider Curl': 'Spider Curl',
+  'Triceps Pushdown': 'Triceps Pushdown', 'Rope Pushdown': 'Triceps Pushdown - Rope Attachment', 'Overhead Cable Extension': 'Cable Rope Overhead Triceps Extension',
+  'Skull Crusher': 'EZ-Bar Skullcrusher', 'Overhead Dumbbell Extension': 'Standing Dumbbell Triceps Extension', 'Dumbbell Kickback': 'Tricep Dumbbell Kickback',
+  'Bench Dip': 'Bench Dips', 'Diamond Push-Up': 'Pushups (Close and Wide Hand Positions)', 'Wrist Curl': 'Palms-Up Barbell Wrist Curl Over A Bench',
+  'Reverse Wrist Curl': 'Palms-Down Wrist Curl Over A Bench', 'Reverse Curl': 'Reverse Barbell Curl', "Farmer's Carry": "Farmer's Walk",
+  'Back Squat': 'Barbell Squat', 'Front Squat': 'Front Barbell Squat', 'Paused Squat': 'Barbell Squat', 'Box Squat': 'Box Squat', 'Goblet Squat': 'Goblet Squat', 'Hack Squat': 'Hack Squat',
+  'Smith Squat': 'Smith Machine Squat', 'Leg Press': 'Leg Press', 'Bulgarian Split Squat': 'Split Squat with Dumbbells', 'Walking Lunge': 'Bodyweight Walking Lunge',
+  'Reverse Lunge': 'Dumbbell Rear Lunge', 'Step-Up': 'Dumbbell Step Ups', 'Leg Extension': 'Leg Extensions', 'Romanian Deadlift': 'Romanian Deadlift',
+  'Dumbbell Romanian Deadlift': 'Stiff-Legged Dumbbell Deadlift', 'Stiff-Leg Deadlift': 'Stiff-Legged Barbell Deadlift', 'Lying Leg Curl': 'Lying Leg Curls',
+  'Seated Leg Curl': 'Seated Leg Curl', 'Nordic Curl': 'Floor Glute-Ham Raise', 'Hip Thrust': 'Barbell Hip Thrust', 'Glute Bridge': 'Single Leg Glute Bridge',
+  'Cable Pull-Through': 'Pull Through', 'Hip Abduction Machine': 'Thigh Abductor', 'Hip Adduction Machine': 'Thigh Adductor', 'Standing Calf Raise': 'Standing Calf Raises',
+  'Seated Calf Raise': 'Seated Calf Raise', 'Leg Press Calf Raise': 'Calf Press On The Leg Press Machine', 'Single-Leg Calf Raise': 'Calf Raise On A Dumbbell',
+  'Pistol Squat': 'Kettlebell Pistol Squat', 'Bodyweight Squat': 'Bodyweight Squat', 'Kettlebell Swing': 'One-Arm Kettlebell Swings', 'Power Clean': 'Power Clean',
+  'Hang Clean': 'Hang Clean', 'Snatch': 'Snatch', 'Plank': 'Plank', 'Side Plank': 'Side Bridge', 'Crunch': 'Crunches', 'Cable Crunch': 'Cable Crunch',
+  'Hanging Leg Raise': 'Hanging Leg Raise', 'Hanging Knee Raise': 'Knee/Hip Raise On Parallel Bars', 'Ab Wheel Rollout': 'Ab Roller', 'Russian Twist': 'Russian Twist',
+  'Pallof Press': 'Pallof Press', 'Woodchopper': 'Standing Cable Wood Chop', 'Dead Bug': 'Dead Bug', 'Decline Sit-Up': 'Sit-Up', 'Treadmill Run': 'Running, Treadmill',
+  'Incline Treadmill Walk': 'Walking, Treadmill', 'Stationary Bike': 'Bicycling, Stationary', 'Rowing Machine': 'Rowing, Stationary', 'Elliptical': 'Elliptical Trainer',
+  'Stair Climber': 'Stairmaster', 'Assault Bike': 'Recumbent Bike', 'Jump Rope': 'Rope Jumping', 'Sled Push': 'Sled Push',
+  'Landmine Rotation': "Landmine 180's", 'Landmine Thruster': 'Landmine Linear Jammer', 'Mountain Climber': 'Mountain Climbers', 'Flutter Kicks': 'Flutter Kicks',
+  'Toes-to-Bar': 'Hanging Pike', 'Dumbbell Side Bend': 'Dumbbell Side Bend', 'Superman Hold': 'Superman', 'Squat Jump': 'Freehand Jump Squat', 'Box Jump': 'Front Box Jump',
+  'Battle Ropes': 'Battling Ropes', 'Sprint Intervals': 'Wind Sprints', 'Arm Circles': 'Arm Circles', 'Cat-Cow': 'Cat Stretch', "World's Greatest Stretch": "World's Greatest Stretch",
+  'Hip Circles': 'Standing Hip Circles', 'Inchworm': 'Inchworm', 'Scapular Pull-Up': 'Scapular Pull-Up', 'Ankle Circles': 'Ankle Circles', "Child's Pose": "Child's Pose",
+  'Standing Hamstring Stretch': 'Standing Hamstring and Calf Stretch', 'Standing Quad Stretch': 'Quad Stretch', 'Kneeling Hip Flexor Stretch': 'Kneeling Hip Flexor',
+  'Doorway Chest Stretch': 'Chest And Front Of Shoulder Stretch', 'Cross-Body Shoulder Stretch': 'Shoulder Stretch', 'Overhead Triceps Stretch': 'Triceps Stretch',
+  'Wall Calf Stretch': 'Calf Stretch Hands Against Wall', 'Figure-4 Glute Stretch': 'Lying Glute', 'Supine Spinal Twist': 'Spinal Stretch', 'Butterfly Stretch': 'Butterfly',
+  'Standing Side Stretch': 'Standing Lateral Stretch', 'Bicycle Crunch': 'Cross-Body Crunch', 'Kettlebell Goblet Clean': 'Kettlebell Dead Clean'
+};
+
+/* Own step-by-step instructions for moves the image library doesn't cover. */
+window.CUSTOM_STEPS = {
+  'Landmine Press': ['Stand facing the landmine, holding the end of the bar at your shoulder with one or both hands.', 'Brace the core and squeeze the glutes.', 'Press the bar up and forward until the arm is straight, reaching slightly.', 'Lower under control back to the shoulder.'],
+  'Landmine Squat': ['Hold the end of the bar at your chest with both hands, elbows tucked.', 'Stand with feet shoulder-width, leaning slightly into the bar.', 'Sit down between your heels, chest tall, knees over toes.', 'Drive through the whole foot to stand.'],
+  'Landmine Row': ['Stand beside the bar, hinge forward with a flat back and hold the end (or a handle) in one hand.', 'Pull the bar toward your hip, keeping the elbow close.', 'Squeeze the shoulder blade, then lower slowly to a full stretch.'],
+  'Landmine Romanian Deadlift': ['Stand facing the bar end, holding it with both hands at hip height.', 'Soft knees; push the hips back while keeping the back flat.', 'Lower until you feel a strong hamstring stretch, then drive the hips forward to stand.'],
+  'Landmine Reverse Lunge': ['Hold the bar end at your chest.', 'Step one foot back and lower the back knee toward the floor.', 'Drive through the front heel to return. Alternate legs or finish one side first.'],
+  'Landmine Anti-Rotation Press': ['Stand side-on to the landmine holding the bar end at your chest with both hands.', 'Brace hard and press the bar straight out in front of your chest.', 'Resist the bar pulling you sideways for 1–2 seconds, then return. Keep hips and shoulders square.'],
+  'Bicycle Crunch': ['Lie on your back, hands lightly behind the head, legs raised with knees bent.', 'Bring one elbow toward the opposite knee while extending the other leg.', 'Switch sides in a slow pedalling motion; keep the lower back pressed down.'],
+  'V-Up': ['Lie flat with arms overhead and legs straight.', 'Lift arms and legs together to meet over your hips, balancing on your glutes.', 'Lower slowly without letting the lower back arch.'],
+  'Bird Dog': ['Start on hands and knees, back flat.', 'Extend one arm forward and the opposite leg back until both are level with the torso.', 'Pause, return slowly, switch sides. Keep the hips level.'],
+  'Suitcase Carry': ['Hold one heavy dumbbell or kettlebell at your side.', 'Stand tall without leaning toward the weight.', 'Walk with short, controlled steps for the set time, then switch hands.'],
+  'Dragon Flag': ['Lie on a bench and grip it behind your head.', 'Lift your body so only the upper back touches, body straight from shoulders to toes.', 'Lower slowly as one rigid line; stop before the lower back sags. Start with bent knees.'],
+  'Plank Shoulder Tap': ['Start in a high plank, feet wider for balance.', 'Tap one shoulder with the opposite hand without rocking the hips.', 'Alternate sides slowly.'],
+  'Bear Crawl': ['On hands and feet with knees hovering just off the floor, back flat.', 'Move the opposite hand and foot forward together in small steps.', 'Keep the hips low and level the whole time.'],
+  'Side Plank Hip Dip': ['Hold a side plank on your forearm, body straight.', 'Lower the hip toward the floor a few centimetres.', 'Lift back above neutral using your obliques. Do all reps, then switch sides.'],
+  'Stir the Pot': ['Hold a plank with forearms on a stability ball.', 'Make small circles with the forearms, keeping the body rigid.', 'Reverse direction halfway through the set.'],
+  'Hollow Hold': ['Lie on your back, arms overhead, legs straight.', 'Press the lower back into the floor and lift shoulders and legs slightly.', 'Hold the "banana" shape; bend knees to make it easier.'],
+  'L-Sit': ['Support yourself on parallettes, dip bars or the floor with straight arms.', 'Lift your legs straight in front, level with the hips.', 'Hold with shoulders pushed down. Tuck the knees if needed.'],
+  'Copenhagen Plank': ['Lie on your side with your top leg resting on a bench, bottom leg underneath.', 'Lift your hips into a side plank, supported by the top leg and forearm.', 'Hold, keeping the body straight; switch sides.'],
+  'Burpee': ['From standing, squat and place your hands on the floor.', 'Jump or step the feet back to a plank (optional push-up).', 'Jump or step the feet back in and jump up with arms overhead.'],
+  'High Knees': ['Run in place, driving the knees up to hip height.', 'Pump the arms and stay on the balls of your feet.', 'Keep the torso tall.'],
+  'Jump Lunge': ['Start in a lunge position.', 'Jump up explosively and switch legs in the air.', 'Land softly into a lunge on the other side and continue.'],
+  'Skater Jumps': ['Bound sideways from one leg to the other, like a speed skater.', 'Land softly on the outside leg with a slight knee bend, other leg behind.', 'Swing the arms for rhythm and push straight back the other way.'],
+  'Shadow Boxing': ['Stand in a boxing stance, hands up by the chin.', 'Throw light, fast combinations (jab, cross, hooks) while moving your feet.', 'Exhale on each punch and keep the core tight.'],
+  'Jumping Jacks': ['Stand with feet together and arms at your sides.', 'Jump the feet out while raising the arms overhead.', 'Jump back to the start. Keep a light, steady rhythm.'],
+  'Band Dislocates': ['Hold a light band wide in front of your hips.', 'With straight arms, raise the band overhead and behind you.', 'Return slowly. Grip wider if your shoulders feel pinched.'],
+  'Leg Swings': ['Hold a wall or rack for balance.', 'Swing one leg forward and back in a controlled arc, gradually increasing the range.', 'Then swing side to side across the body. Switch legs.'],
+  'Thoracic Rotation': ['On hands and knees, place one hand behind your head.', 'Rotate the elbow down toward the opposite arm, then up toward the ceiling.', 'Follow the elbow with your eyes; keep the hips still.'],
+  'Glute Bridge March': ['Lie on your back, knees bent, and lift into a glute bridge.', 'Keeping the hips level, lift one foot a few centimetres, then the other.', 'Keep squeezing the glutes throughout.'],
+  'Pigeon Stretch': ['From a plank, bring one knee forward behind your wrist with the shin angled across your body.', 'Extend the other leg straight back.', 'Lower the hips toward the floor and fold forward gently. Switch sides.'],
+  'Cobra Stretch': ['Lie face down with hands under the shoulders.', 'Gently press up, lifting the chest while hips stay on the floor.', 'Keep shoulders down and stop at a comfortable stretch.'],
+  'Outdoor Run': ['Start with 5 minutes of easy jogging.', 'Run at a pace where you can still speak in short sentences.', 'Finish with a few minutes of walking.'],
+  'Swimming': ['Warm up with a few easy lengths.', 'Swim at a steady pace, focusing on long, relaxed strokes and rhythmic breathing.', 'Cool down with easy lengths.'],
+  'Sprint Intervals': ['Warm up for 5 minutes.', 'Sprint hard for 20–30 seconds.', 'Recover with easy walking or jogging for 60–90 seconds and repeat.'],
+  'Dead Hang': ['Grip a pull-up bar slightly wider than shoulders.', 'Hang with arms straight and shoulders slightly engaged (not shrugged to the ears).', 'Breathe steadily and hold for time.'],
+  'Hip Abduction Machine': ['Sit with your back against the pad and the pads outside your knees.', 'Push the knees out against the pads.', 'Pause, then return slowly.']
+};
+
+/* Intensity techniques (hypertrophy). */
+window.TECHNIQUES = {
+  drop: { short: 'D', name: 'Drop set', how: 'Do your set close to failure, then immediately reduce the weight by ~20–25% and keep going with no rest. Usually 1–3 drops.', why: 'Extends the set past the point you would normally stop, adding hard reps in less time. Studies show drop sets build muscle about as well as standard sets in less time.', when: 'Last set of an isolation or machine exercise. Avoid on heavy barbell squats/deadlifts.' },
+  rp: { short: 'RP', name: 'Rest-pause', how: 'Take a set to 1 rep from failure, rest 15–20 seconds, then do as many more reps as you can. Repeat 1–2 times.', why: 'Lets you do more reps with a heavy load, so you get more effective reps per set.', when: 'Last set of compound or isolation work, with a spotter or safety pins on pressing.' },
+  myo: { short: 'M', name: 'Myo-reps', how: 'Activation set of 12–20 reps close to failure, then 3–5 breaths of rest, then mini-sets of 3–5 reps with 3–5 breaths between, until you can’t hit the target reps.', why: 'Several near-failure reps in a short time, which is very time-efficient for hypertrophy.', when: 'Isolation exercises: curls, raises, leg extensions, calves.' },
+  amrap: { short: 'A', name: 'AMRAP', how: 'As many reps as possible with good form on the last set.', why: 'Shows how much you have in the tank and drives progression.', when: 'Last set of a main lift. Stop 1 rep before your form breaks.' },
+  fail: { short: 'F', name: 'To failure', how: 'Continue until you cannot complete another rep with good form.', why: 'Maximises effort; most useful on isolation moves. Use sparingly — too much failure training hurts recovery.', when: 'Final set of isolation or machine work.' },
+  tempo: { short: 'T', name: 'Slow eccentric', how: 'Lower the weight over 3–4 seconds, pause, lift normally.', why: 'More time under tension and better control; great when you are stuck or returning from a break.', when: 'Any exercise; use a slightly lighter weight.' },
+  partials: { short: 'P', name: 'Lengthened partials', how: 'After full-range failure, keep doing half-reps in the stretched part of the movement.', why: 'Training at long muscle lengths appears particularly effective for growth.', when: 'Last set of curls, leg curls, lateral raises, calves.' }
+};
+
+/* Injury / condition rules. Exercises listed in "avoid" are swapped for safer variations of the
+   same movement; "caution" ones stay but get a warning. Not medical advice. */
+window.CONDITIONS = {
+  shoulder: { label: 'Shoulder', icon: '🦾',
+    avoid: ['Overhead Press', 'Push Press', 'Handstand Push-Up', 'Upright Row', 'Chest Dip', 'Weighted Dip', 'Bench Dip', 'Snatch', 'Arnold Press', 'Dragon Flag', 'Band Dislocates'],
+    caution: ['Bench Press', 'Incline Bench Press', 'Weighted Pull-Up', 'Pull-Up', 'Dumbbell Fly', 'Skull Crusher', 'Lateral Raise'],
+    prefer: ['Landmine Press', 'Machine Chest Press', 'Dumbbell Bench Press', 'Cable Lateral Raise', 'Face Pull', 'Lat Pulldown', 'Chest-Supported Row'],
+    tip: 'Keep pressing below or in front of the head, prefer neutral grips and landmine presses, and stop any move that pinches.' },
+  lowerback: { label: 'Lower back', icon: '🧍',
+    avoid: ['Deadlift', 'Rack Pull', 'Good Morning', 'Barbell Row', 'Pendlay Row', 'Stiff-Leg Deadlift', 'Power Clean', 'Hang Clean', 'Snatch', 'Decline Sit-Up', 'V-Up', 'Russian Twist', 'Dragon Flag', 'Toes-to-Bar', 'Back Squat', 'Push Press'],
+    caution: ['Romanian Deadlift', 'Front Squat', 'Kettlebell Swing', 'T-Bar Row', 'Sumo Deadlift', 'Hip Thrust', 'Walking Lunge'],
+    prefer: ['Leg Press', 'Chest-Supported Row', 'Seated Cable Row', 'Hip Thrust', 'Goblet Squat', 'Bird Dog', 'Dead Bug', 'Pallof Press', 'Back Extension', 'Trap Bar Deadlift'],
+    tip: 'Brace before every rep, avoid loaded spinal flexion and twisting, and favour chest-supported and machine variations.' },
+  knee: { label: 'Knee', icon: '🦵',
+    avoid: ['Jump Lunge', 'Squat Jump', 'Box Jump', 'Pistol Squat', 'Skater Jumps', 'Sprint Intervals', 'Jump Rope', 'Burpee', 'High Knees', 'Walking Lunge'],
+    caution: ['Back Squat', 'Front Squat', 'Leg Extension', 'Bulgarian Split Squat', 'Hack Squat', 'Leg Press', 'Step-Up'],
+    prefer: ['Box Squat', 'Goblet Squat', 'Hip Thrust', 'Romanian Deadlift', 'Lying Leg Curl', 'Glute Bridge', 'Stationary Bike', 'Reverse Lunge'],
+    tip: 'Use a pain-free depth, keep the knee tracking over the toes, and swap jumping for cycling or sled work.' },
+  wrist: { label: 'Wrist / elbow', icon: '✋',
+    avoid: ['Skull Crusher', 'Close-Grip Bench Press', 'Front Squat', 'Power Clean', 'Hang Clean', 'Diamond Push-Up', 'Wrist Curl', 'Reverse Wrist Curl', 'Handstand Push-Up'],
+    caution: ['Barbell Curl', 'Push-Up', 'Bench Press', 'Plank', 'Mountain Climber', 'Overhead Cable Extension'],
+    prefer: ['Hammer Curl', 'Rope Pushdown', 'Dumbbell Bench Press', 'Cable Curl', 'Machine Chest Press'],
+    tip: 'Neutral (palms-facing) grips and cables are kindest to wrists and elbows. Fists or push-up handles help for push-ups.' },
+  hip: { label: 'Hip', icon: '🦴',
+    avoid: ['Sumo Deadlift', 'Pistol Squat', 'Copenhagen Plank', 'Jump Lunge', 'Skater Jumps', 'Hip Adduction Machine'],
+    caution: ['Back Squat', 'Bulgarian Split Squat', 'Pigeon Stretch', 'Deadlift', 'Walking Lunge'],
+    prefer: ['Leg Press', 'Box Squat', 'Glute Bridge', 'Hip Thrust', 'Lying Leg Curl', 'Step-Up'],
+    tip: 'Limit depth to a pain-free range and avoid wide stances and twisting under load.' },
+  ankle: { label: 'Ankle / foot', icon: '🦶',
+    avoid: ['Box Jump', 'Squat Jump', 'Jump Lunge', 'Skater Jumps', 'Jump Rope', 'Sprint Intervals', 'High Knees', 'Burpee', 'Outdoor Run', 'Treadmill Run'],
+    caution: ['Standing Calf Raise', 'Single-Leg Calf Raise', 'Walking Lunge', 'Sled Push'],
+    prefer: ['Stationary Bike', 'Rowing Machine', 'Seated Calf Raise', 'Leg Press', 'Swimming'],
+    tip: 'Avoid impact; seated and machine options keep training going while it heals.' },
+  neck: { label: 'Neck', icon: '🧣',
+    avoid: ['Handstand Push-Up', 'Barbell Shrug', 'Crunch', 'Decline Sit-Up', 'V-Up'],
+    caution: ['Back Squat', 'Dumbbell Shrug', 'Upright Row', 'Bicycle Crunch'],
+    prefer: ['Dead Bug', 'Pallof Press', 'Plank', 'Goblet Squat', 'Face Pull'],
+    tip: 'Keep the neck neutral (no craning in crunches), and avoid loading on the upper back if it flares up.' },
+  heart: { label: 'Heart / blood pressure', icon: '❤️',
+    avoid: ['Dragon Flag', 'Handstand Push-Up', 'Sprint Intervals', 'Burpee'],
+    caution: ['Deadlift', 'Back Squat', 'Leg Press', 'Battle Ropes', 'Assault Bike'],
+    prefer: ['Incline Treadmill Walk', 'Stationary Bike', 'Machine Chest Press', 'Leg Press', 'Seated Cable Row'],
+    noTech: ['fail', 'amrap', 'rp'], noHeavy: true,
+    tip: 'Breathe out on every effort (don’t hold your breath), stay 2–3 reps away from failure and avoid very heavy singles. Get your doctor’s OK for intense training.' }
+};
+window.LOW_IMPACT_AVOID = ['Box Jump', 'Squat Jump', 'Jump Lunge', 'Skater Jumps', 'Burpee', 'Jump Rope', 'High Knees', 'Sprint Intervals', 'Pistol Squat'];

@@ -4,23 +4,26 @@ Forge is a gym tracker that runs on your phone and stores everything on it. It's
 
 ## Features
 
-- **Guided workouts.** Today's routine opens from your weekly plan. Weights are pre-filled from your last session, a rest timer runs with a beep, PRs are flagged as you log, and the screen stays awake.
-- **Progression engine, per routine or per exercise.** Choose linear, double progression, added time, or "repeat last". Every suggestion shows why it was made (for example, "+2.5 kg: hit 3×5 last time"). Linear progression deloads 10% after 3 missed sessions.
-- **Set types.** Warm-ups (excluded from records and progression), auto warm-up ramps, supersets, timed holds with a countdown timer, cardio (time + distance), body-weight and assisted exercises, and optional RPE/RIR per set.
-- **Tools.** A plate calculator that uses the plates you own and a 1RM calculator with percentage tables.
-- **Estimated 1RM per lift.** Uses the Epley formula, adjusted for RIR, and won't estimate above 12 reps. Includes a rep-max table and a history chart.
-- **Structural balance.** Compares your lifts against classic strength ratios and names your weakest link.
-- **Muscle map** with three views:
-  - Balance: weekly sets per muscle against a 10–20 set target zone
-  - Fatigue: estimated recovery
-  - Strength: when each muscle was last trained and which lifts trained it
-- **Stats.** A 12-month heatmap, weekly volume, sessions per week, week streaks, and 16 badges.
-- **Body tracking.** A body-weight chart with a goal line (dots are green when you moved toward the goal, red when you moved away), plus measurements and body fat.
-- **Weekly plan.** Choose Monday or Sunday as the first day. You can move a single day's session without changing the plan.
-- **Five starter programs**, 140 built-in exercises, custom exercises, fuzzy search, and an equipment filter.
-- **Editing.** You can edit past workouts, log workouts after the fact, repeat a workout, save a workout as a routine, and share a text summary.
-- **Data.** JSON backup and restore (restore merges and never overwrites), CSV export, and import from **Strong, Hevy and FitNotes**.
-- Dark, light and auto themes, 8 accent colours or a custom one, and kg/lb.
+**People & privacy**
+- **A profile for each person** on a device. Type your name and Forge remembers you; each profile's data is stored separately. An optional **PIN** keeps others out on shared phones.
+- **Send a profile to another device** with a one-time transfer code or link. The data travels inside the code itself, never through a server.
+- **Health profile**: weight, height, age and sex, plus injuries and surgeries (shoulder, lower back, knee, wrist/elbow, hip, ankle, neck, heart/blood pressure). Risky exercises are swapped for safer variations of the same movement, and you get warnings during workouts. Very high BMI or age 55+ favours low-impact options. This is not medical advice.
+
+**Training**
+- **Program library**: 18 proven routines (beginner full body, 5×5, upper/lower, PHUL-style, PPL, golden-era split, 5-day split, strength 4-day, dumbbell-only, calisthenics, core crusher with landmine, landmine full body, HIIT, cardio, 30-minute express, glutes). Filter by goal, days, equipment and level. Recommendations are based on your profile, and you can preview every day before adding a program.
+- **Every routine gets a warm-up and a cool-down**: dynamic warm-up and stretching, logged separately from your training stats.
+- **Automatic exercise rotation (training blocks)**: every 3–8 weeks (4 by default) Forge proposes new variations of each movement and a new rep focus (hypertrophy → strength → metabolic). You always review the changes, and you can undo a rotation.
+- **Plateau coaching**: if you've had no new best on a lift for 3+ sessions, you get motivational nudges and one-tap fixes (+weight, rest-pause, drop set, +1 set, deload, swap variation).
+- **Hypertrophy techniques**: drop sets, rest-pause, myo-reps, AMRAP, to-failure, slow eccentrics and lengthened partials, set per set or per routine, with the rest timer adjusted automatically.
+- Guided workouts showing **"Exercise 3 of 8"** and set progress, with pre-filled weights, a rest timer, PR alerts and supersets.
+- Progression engine (linear / double / added time) that shows the reason for each suggested weight.
+
+**Guides & stats**
+- **How-to guide for every exercise**: start/finish photos, a muscle map, step-by-step instructions, safety cues, suitable techniques and alternative variations. Exercises without photos show the muscle map instead.
+- Muscle map (balance, fatigue, strength), monthly challenges, neglected-muscle nudges, structural balance, e1RM charts, heatmap and badges.
+- **Body composition**: log smart-scale or body-composition scan readings (body fat, muscle, visceral fat, water, BMR, metabolic age…) with a photo of the printout, and see the changes and charts. BMI is calculated from your height.
+- Backup, restore and merge; CSV export; import from Strong, Hevy and FitNotes.
+- Adjustable text size, themes, accent colours, kg/lb.
 
 ## Deploy to GitHub Pages (free, about 3 minutes)
 
@@ -46,6 +49,9 @@ git push -u origin main
 
 ## Where your data lives (important)
 
+- **Updating the app never touches user data.** Updates replace only the app files; workouts live in the phone's own storage (IndexedDB). Before any data-format upgrade the app also keeps an untouched safety snapshot.
+- **Nobody can change the app except you.** Visitors only *read* the site; editing requires your GitHub login. Protect it with two-factor authentication. The page runs under a strict Content-Security-Policy (no external scripts, no outgoing connections), and imported files and codes are validated before use.
+
 - All data is stored in **IndexedDB inside the installed app** on your phone. Nothing is uploaded.
 - iOS keeps the Home Screen app's storage **separate from Safari**. Data you entered in a Safari tab won't appear in the installed app; move it with Backup → Restore if needed.
 - **If you delete the app from your Home Screen, iOS deletes its data.** Use *Settings → Back up (JSON)* regularly and save the file to Files or iCloud Drive. The app reminds you after 14 days without a backup.
@@ -64,7 +70,8 @@ Forge is plain HTML/CSS/JS with no build step and no dependencies:
 | `index.html` | App shell, iOS meta tags |
 | `app.css` | All styles (CSS variables at the top for theming) |
 | `app.js` | App logic, storage, views |
-| `data.js` | Exercise library, muscle groups, strength ratios |
+| `data.js` | Exercise library, movement patterns, safety cues, techniques, injury rules |
+| `guide.js` + `img/` | Exercise photos and step-by-step instructions (public domain, [Free Exercise DB](https://github.com/yuhonas/free-exercise-db)) |
 | `sw.js` | Offline cache |
 | `manifest.webmanifest` | Install metadata and icons |
 
