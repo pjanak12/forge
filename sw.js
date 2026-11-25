@@ -1,6 +1,6 @@
 /* Offline cache for the app files. Bump VERSION whenever you change any file.
    Updating only replaces cached app files — user data lives in IndexedDB and is never touched here. */
-const VERSION = 'forge-v2.0.0';
+const VERSION = 'forge-v2.1.0';
 const IMG_CACHE = 'forge-img-v1'; // kept across updates so photos aren't re-downloaded
 const ASSETS = [
   './',

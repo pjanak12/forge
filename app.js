@@ -155,11 +155,28 @@ function entriesFor(exId, opt = {}) {
   }
   return out;
 }
+/* Dumbbell modes. Weight is logged per dumbbell and reps per arm (per side). */
+const DB_MODES = {
+  both: { label: 'Both arms', short: 'Both', help: 'Both dumbbells move together. Weight = one dumbbell, reps = per arm.', factor: 2 },
+  alt: { label: 'Alternating', short: 'Alternate', help: 'Arms take turns (L, R, L…). Weight = one dumbbell, reps = per arm (count each arm).', factor: 2 },
+  single: { label: 'One arm at a time', short: 'One arm', help: 'Finish all reps on one side, then the other. Weight = the dumbbell, reps = per side. Rest after both sides.', factor: 2 },
+  one: { label: 'One dumbbell, both hands', short: '1 DB', help: 'A single dumbbell held with both hands (e.g. goblet squat). Weight = that dumbbell.', factor: 1 }
+};
+const DB_DEFAULT = { 'Goblet Squat': 'one', 'Overhead Dumbbell Extension': 'one', 'One-Arm Dumbbell Row': 'single', 'Concentration Curl': 'single', 'Dumbbell Kickback': 'single', 'Dumbbell Side Bend': 'single', 'Suitcase Carry': 'single', 'Dumbbell Curl': 'alt', 'Hammer Curl': 'alt', 'Incline Dumbbell Curl': 'alt', 'Spider Curl': 'both', 'Bulgarian Split Squat': 'both', 'Front Raise': 'alt' };
+const isDB = (ex) => ex.equipment === 'dumbbell' && (ex.type === 'weight' || ex.type === 'timed');
+function dbModeFor(exId, item) {
+  const ex = getEx(exId); if (!isDB(ex)) return null;
+  if (item && DB_MODES[item.dbMode]) return item.dbMode;
+  const last = S.workouts.find((w) => w.entries.some((e) => e.exId === exId && e.dbMode));
+  if (last) return last.entries.find((e) => e.exId === exId && e.dbMode).dbMode;
+  return DB_DEFAULT[ex.name] || 'both';
+}
+const loadFactor = (e) => (e.dbMode && DB_MODES[e.dbMode] ? DB_MODES[e.dbMode].factor : 1);
 const wVolume = (w) => {
   let v = 0;
   for (const e of w.entries) {
-    const t = getEx(e.exId).type;
-    if (t === 'weight' || t === 'bodyweight') for (const s of e.sets) if (isWork(s) && s.w > 0 && s.r > 0) v += s.w * s.r;
+    const t = getEx(e.exId).type, f = loadFactor(e);
+    if (t === 'weight' || t === 'bodyweight') for (const s of e.sets) if (isWork(s) && s.w > 0 && s.r > 0) v += s.w * s.r * f;
   }
   return v;
 };
@@ -677,9 +694,10 @@ VIEWS.workout = () => {
     }
     const hint = e.sg && e.sg.src ? `<div class="ex-hint">${target ? `Target ${target}${e.sg.w ? ' @ ' + fmtW(e.sg.w) : ''} · ` : ''}<span class="src">${esc(e.sg.src)}</span>${rec.e1rm ? ` · best e1RM ${fmtW(rec.e1rm)}` : ''}</div>` : '';
     const timedLike = t === 'timed' || mobil;
-    const wLabel = t === 'bodyweight' ? `+${U()}` : t === 'assisted' ? `−${U()}` : t === 'cardio' ? 'Min' : U();
-    const rLabel = timedLike ? 'Sec' : t === 'cardio' ? distU() : 'Reps';
-    html += `<div class="ex ${e.ss ? 'superset' : ''}" ${ssNext ? 'style="margin-bottom:3px"' : ''}><div class="ex-head"><button style="border:0;background:none;padding:0" data-act="exDetail" data-id="${e.exId}" aria-label="How to do ${esc(ex.name)}">${thumb(ex)}</button><div class="grow" style="min-width:0"><div class="exnum">${mobil ? (phase === 'cooldown' ? 'STRETCH' : 'WARM-UP') : `EXERCISE ${exN} OF ${mains.length}`}</div><div class="name">${esc(ex.name)} ${ssLabel}</div><div class="tiny muted">${MUSCLES[ex.muscle] || ''}${ex.secondary.length ? ' + ' + ex.secondary.slice(0, 2).map((m) => MUSCLES[m]).join(', ') : ''}${e.note ? ' · 📝 ' + esc(e.note) : ''}</div><button class="btn ghost sm" style="padding:2px 0" data-act="exDetail" data-id="${e.exId}">How to ›</button></div><button class="iconbtn" data-act="exMenu" data-e="${ei}">•••</button></div>${hint}${riskNote(e.exId, ei)}${mobil ? '' : coachHTML(e, ei)}`;
+    const dbm = e.dbMode && DB_MODES[e.dbMode];
+    const wLabel = t === 'bodyweight' ? `+${U()}` : t === 'assisted' ? `−${U()}` : t === 'cardio' ? 'Min' : dbm ? `${U()}/DB` : U();
+    const rLabel = timedLike ? (dbm && e.dbMode !== 'one' ? 'Sec/side' : 'Sec') : t === 'cardio' ? distU() : dbm && e.dbMode !== 'one' ? 'Reps/arm' : 'Reps';
+    html += `<div class="ex ${e.ss ? 'superset' : ''}" ${ssNext ? 'style="margin-bottom:3px"' : ''}><div class="ex-head"><button style="border:0;background:none;padding:0" data-act="exDetail" data-id="${e.exId}" aria-label="How to do ${esc(ex.name)}">${thumb(ex)}</button><div class="grow" style="min-width:0"><div class="exnum">${mobil ? (phase === 'cooldown' ? 'STRETCH' : 'WARM-UP') : `EXERCISE ${exN} OF ${mains.length}`}</div><div class="name">${esc(ex.name)} ${ssLabel}</div><div class="tiny muted">${MUSCLES[ex.muscle] || ''}${ex.secondary.length ? ' + ' + ex.secondary.slice(0, 2).map((m) => MUSCLES[m]).join(', ') : ''}${e.note ? ' · 📝 ' + esc(e.note) : ''}</div><button class="btn ghost sm" style="padding:2px 0" data-act="exDetail" data-id="${e.exId}">How to ›</button></div><button class="iconbtn" data-act="exMenu" data-e="${ei}">•••</button></div>${hint}${dbm ? `<div style="padding:0 12px 8px"><div class="chips" style="padding:0 0 4px">${Object.entries(DB_MODES).map(([k, m]) => `<button class="chip ${e.dbMode === k ? 'on' : ''}" style="padding:4px 10px" data-act="dbMode" data-e="${ei}" data-v="${k}">${m.short}</button>`).join('')}</div><div class="tiny muted">🏋️ ${dbm.help}</div></div>` : ''}${riskNote(e.exId, ei)}${mobil ? '' : coachHTML(e, ei)}`;
     const showEff = eff !== 'off' && t !== 'cardio' && !mobil;
     html += `<table class="sets"><thead><tr><th>Set</th><th>Prev</th>${mobil ? '' : `<th>${wLabel}</th>`}<th>${rLabel}</th>${showEff ? `<th>${eff.toUpperCase()}</th>` : ''}<th>✓</th></tr></thead><tbody>`;
     let wn = 0;
@@ -985,7 +1003,7 @@ function viewWorkoutSheet(id) {
       h += `<div class="grid3 mt"><div class="stat"><div class="v" style="font-size:18px">${fmtDur(wDur(w))}</div><div class="l">Duration</div></div><div class="stat"><div class="v" style="font-size:18px">${fmtVol(wVolume(w))}</div><div class="l">Volume</div></div><div class="stat"><div class="v" style="font-size:18px">${wSets(w)}</div><div class="l">Sets</div></div></div>`;
       if (prs.length) h += `<div class="card mt"><b>🏆 ${prs.length} personal record${prs.length > 1 ? 's' : ''}</b>${prs.map((p) => `<div class="small mt">${esc(getEx(p.exId).name)} — ${setStr(getEx(p.exId), p.set)} <span class="tag pr">${p.tags.join(', ')}</span></div>`).join('')}</div>`;
       if (w.notes) h += `<div class="card small">${esc(w.notes)}</div>`;
-      h += w.entries.map((e) => { const ex = getEx(e.exId); return `<div class="card"><div class="row between"><b>${esc(ex.name)}</b>${e.ss ? '<span class="tag accent">superset</span>' : ''}</div>${e.note ? `<div class="tiny muted">${esc(e.note)}</div>` : ''}<div class="small mt">${e.sets.map((s, i) => `<div class="row between" style="padding:3px 0;border-bottom:1px solid var(--line)"><span class="${s.warm ? '' : 'muted'}" style="${s.warm ? 'color:var(--warn)' : ''}">${s.warm ? 'Warm-up' : 'Set ' + (e.sets.slice(0, i + 1).filter((x) => !x.warm).length)}</span><span>${setStr(ex, s)}${ex.type === 'weight' && e1rm(s) ? ` <span class="faint tiny">e1RM ${num(toU(e1rm(s)), 0)}</span>` : ''}</span></div>`).join('')}</div></div>`; }).join('');
+      h += w.entries.map((e) => { const ex = getEx(e.exId); return `<div class="card"><div class="row between"><b>${esc(ex.name)}</b><span>${e.dbMode && DB_MODES[e.dbMode] ? `<span class="tag">${DB_MODES[e.dbMode].short}${e.dbMode !== 'one' ? ' · per arm' : ''}</span>` : ''}${e.ss ? '<span class="tag accent">superset</span>' : ''}</span></div>${e.note ? `<div class="tiny muted">${esc(e.note)}</div>` : ''}<div class="small mt">${e.sets.map((s, i) => `<div class="row between" style="padding:3px 0;border-bottom:1px solid var(--line)"><span class="${s.warm ? '' : 'muted'}" style="${s.warm ? 'color:var(--warn)' : ''}">${s.warm ? 'Warm-up' : 'Set ' + (e.sets.slice(0, i + 1).filter((x) => !x.warm).length)}</span><span>${setStr(ex, s)}${ex.type === 'weight' && e1rm(s) ? ` <span class="faint tiny">e1RM ${num(toU(e1rm(s)), 0)}</span>` : ''}</span></div>`).join('')}</div></div>`; }).join('');
       h += `<div class="grid2"><button class="btn" data-act="editWorkout" data-id="${w.id}">Edit</button><button class="btn" data-act="repeatWorkout" data-id="${w.id}">Repeat</button><button class="btn" data-act="saveAsRoutine" data-id="${w.id}">Save as routine</button><button class="btn" data-act="shareWorkout" data-id="${w.id}">Share summary</button></div><button class="btn danger block mt" data-act="deleteWorkout" data-id="${w.id}">Delete workout</button>`;
       return h;
     }
@@ -1041,6 +1059,7 @@ function routineSheet(id) {
         else if (t !== 'cardio') h += f('rest', 'Rest (s)', it.rest, 'numeric', S.settings.rest);
         h += `</div><div class="grid2 mt" style="gap:6px">`;
         if (t === 'weight' || t === 'assisted') h += f('rest', 'Rest (s)', it.rest, 'numeric', S.settings.rest);
+        if (isDB(ex)) h += `<div class="field mb0"><label class="tiny">Dumbbell style</label><select class="input" style="padding:8px" data-on="rItem" data-id="${id}" data-i="${i}" data-k="dbMode">${Object.entries(DB_MODES).map(([k, m]) => `<option value="${k}" ${(it.dbMode || DB_DEFAULT[ex.name] || 'both') === k ? 'selected' : ''}>${m.label}</option>`).join('')}</select></div>`;
         if (t === 'weight' || t === 'bodyweight') h += `<div class="field mb0"><label class="tiny">Last-set technique</label><select class="input" style="padding:8px" data-on="rItem" data-id="${id}" data-i="${i}" data-k="tech"><option value="">None</option>${Object.entries(TECH).map(([k, v]) => `<option value="${k}" ${it.tech === k ? 'selected' : ''}>${v.name}</option>`).join('')}</select></div>`;
         if (t === 'weight') h += `<div class="field mb0"><label class="tiny">Progression</label><select class="input" style="padding:8px" data-on="rItem" data-id="${id}" data-i="${i}" data-k="prog"><option value="routine">Routine default</option>${Object.entries(PROG).filter(([k]) => k !== 'time').map(([k, v]) => `<option value="${k}" ${it.prog === k ? 'selected' : ''}>${v}</option>`).join('')}</select></div>`;
         h += `</div>`;
@@ -1216,7 +1235,7 @@ function makeEntry(exId, item, prog, ss, past) {
     } else last.tech = tech;
   }
   const phase = item && item.phase ? item.phase : (ex.type === 'mobility' ? 'warmup' : 'main');
-  return { id: uid(), exId, ss: ss || null, phase, item: item ? { ...item } : null, prog, sg: { src: sg.src, w: sg.w, r: sg.r, t: sg.t }, prev: prev.map((s) => ({ w: s.w, r: s.r, t: s.t, d: s.d })), sets, note: '' };
+  return { id: uid(), exId, ss: ss || null, phase, dbMode: dbModeFor(exId, item), item: item ? { ...item } : null, prog, sg: { src: sg.src, w: sg.w, r: sg.r, t: sg.t }, prev: prev.map((s) => ({ w: s.w, r: s.r, t: s.t, d: s.d })), sets, note: '' };
 }
 function startWorkout(routineId, opts = {}) {
   if (S.active) { toast('Finish or discard the current workout first'); closeAllSheets(); go('workout'); return; }
@@ -1318,7 +1337,7 @@ function startTick() { if (!tickTimer) tickTimer = setInterval(tick, 250); }
 function commitWorkout() {
   const a = S.active;
   const w = { id: a.origId || a.id, start: a.start, end: a.editing ? a.end : Date.now(), routineId: a.routineId, name: a.name.trim() || 'Workout', notes: a.notes || '', entries: [] };
-  w.entries = a.entries.map((e) => ({ id: e.id, exId: e.exId, ss: e.ss, note: e.note || '', sets: e.sets.filter((s) => s.done).map((s) => { const c = { ...s }; delete c.ts; return c; }) })).filter((e) => e.sets.length);
+  w.entries = a.entries.map((e) => ({ id: e.id, exId: e.exId, ss: e.ss, note: e.note || '', phase: e.phase, dbMode: e.dbMode || undefined, sets: e.sets.filter((s) => s.done).map((s) => { const c = { ...s }; delete c.ts; return c; }) })).filter((e) => e.sets.length);
   if (a.origId) { const i = S.workouts.findIndex((x) => x.id === a.origId); if (i >= 0) S.workouts[i] = w; else S.workouts.push(w); }
   else S.workouts.push(w);
   sortW();
@@ -2058,7 +2077,7 @@ function sanitizeData(o) {
   const out = {};
   out.workouts = arr(o.workouts).filter((w) => w && typeof w === 'object' && n(w.start)).map((w) => ({
     id: str(w.id, 80) || uid(), start: n(w.start), end: n(w.end) || n(w.start), routineId: str(w.routineId, 80) || null, name: str(w.name) || 'Workout', notes: str(w.notes, 4000),
-    entries: arr(w.entries).filter((e) => e && typeof e.exId === 'string').map((e) => ({ id: str(e.id, 80) || uid(), exId: str(e.exId, 120), ss: str(e.ss, 80) || null, note: str(e.note, 1000), phase: ['warmup', 'main', 'cooldown'].includes(e.phase) ? e.phase : undefined,
+    entries: arr(w.entries).filter((e) => e && typeof e.exId === 'string').map((e) => ({ id: str(e.id, 80) || uid(), exId: str(e.exId, 120), ss: str(e.ss, 80) || null, note: str(e.note, 1000), phase: ['warmup', 'main', 'cooldown'].includes(e.phase) ? e.phase : undefined, dbMode: DB_MODES[e.dbMode] ? e.dbMode : undefined,
       sets: arr(e.sets).filter((s) => s && typeof s === 'object').map((s) => ({ id: str(s.id, 80) || uid(), w: n(s.w), r: n(s.r), t: n(s.t), d: n(s.d), eff: s.eff && n(s.eff.v) != null ? { v: n(s.eff.v), scale: s.eff.scale === 'rir' ? 'rir' : 'rpe' } : null, warm: !!s.warm, done: s.done !== false, tech: TECH[s.tech] ? s.tech : undefined })) }))
   }));
   out.routines = arr(o.routines).filter((r) => r && r.id && Array.isArray(r.items)).map((r) => ({ ...r, id: str(r.id, 80), name: str(r.name) || 'Routine', prog: PROG[r.prog] ? r.prog : 'double', items: r.items.filter((i) => i && typeof i.exId === 'string') }));
@@ -2490,6 +2509,7 @@ A.pdInjury = (d) => { const st = topSt(), a = st.d.injuries || (st.d.injuries = 
 A.addSurgery = () => { const st = topSt(); (st.d.surgeries || (st.d.surgeries = [])).push({ area: st.srgArea || 'knee', date: st.srgDate || '', note: (st.srgNote || '').slice(0, 80) }); st.srgNote = ''; st.srgDate = ''; refreshSheet(); };
 A.rmSurgery = (d) => { topSt().d.surgeries.splice(+d.i, 1); refreshSheet(); };
 A.swapSafe = (d) => { const e = S.active.entries[+d.e]; const ne = makeEntry(d.id, e.item ? { ...e.item, exId: d.id, inc: undefined } : null, e.prog, e.ss, S.active.editing); S.active.entries[+d.e] = ne; save('active'); render(); toast(`Swapped to ${getEx(d.id).name}`); };
+A.dbMode = (d) => { const e = S.active.entries[+d.e]; e.dbMode = d.v; if (e.item) e.item.dbMode = d.v; const r = S.routines.find((x) => x.id === S.active.routineId); const it = r && r.items.find((i) => i.exId === e.exId); if (it) { it.dbMode = d.v; save('routines'); } save('active'); render(); toast(DB_MODES[d.v].label + ' — remembered for next time'); };
 A.addScan = () => scanSheet();
 A.editScan = (d) => scanSheet(d.id);
 A.delScan = (d) => { S.scans = S.scans.filter((x) => x.id !== d.id); save('scans'); closeSheet(); render(); };
@@ -2533,6 +2553,7 @@ ON.rItem = (v, d) => {
   const it = S.routines.find((x) => x.id === d.id).items[+d.i], k = d.k;
   if (k === 'prog') it.prog = v === 'routine' ? undefined : v;
   else if (k === 'tech') it.tech = TECH[v] ? v : undefined;
+  else if (k === 'dbMode') it.dbMode = DB_MODES[v] ? v : undefined;
   else if (k === 'phase') { it.phase = v; save('routines'); refreshSheet(); return; }
   else if (k === 'inc') it.inc = pnum(v) == null ? undefined : fromU(pnum(v));
   else { const n = pnum(v); it[k] = n == null ? undefined : Math.round(n); }
