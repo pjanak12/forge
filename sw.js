@@ -1,6 +1,6 @@
 /* Offline cache for the app files. Bump VERSION whenever you change any file.
    Updating only replaces cached app files — user data lives in IndexedDB and is never touched here. */
-const VERSION = 'forge-v2.2.0';
+const VERSION = 'forge-v2.2.1';
 const IMG_CACHE = 'forge-img-v1'; // kept across updates so photos aren't re-downloaded
 const ASSETS = [
   './',
@@ -41,7 +41,8 @@ self.addEventListener('fetch', (e) => {
   // App files: try the network first (so updates arrive at once), fall back to cache when offline.
   e.respondWith(
     Promise.race([
-      fetch(req).then(put),
+      // 'no-cache' revalidates with the server, so a new version shows up right away (GitHub Pages caches files for 10 min).
+      fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' }).then(put),
       new Promise((_, rej) => setTimeout(() => rej(new Error('slow')), 3500))
     ]).catch(() => caches.match(req, { ignoreSearch: true }).then((hit) => hit || caches.match('./index.html')))
   );
