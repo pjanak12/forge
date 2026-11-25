@@ -496,16 +496,25 @@ function lineChart(pts, o = {}) {
   const dots = sorted.length <= 40 ? sorted.map((p) => `<circle class="dot" cx="${X(p.x).toFixed(1)}" cy="${Y(p.y).toFixed(1)}" r="2.6"${p.c ? ` style="fill:${p.c}"` : ''}/>`).join('') : '';
   return `<svg class="chart" viewBox="0 0 ${W} ${h}">${g}<path class="area" d="${area}"/><path class="line" d="${d}"/>${goal}${dots}</svg>`;
 }
+function niceMax(v, int) {
+  if (v <= 0) return 1;
+  const p = Math.pow(10, Math.floor(Math.log10(v))), m = v / p;
+  let n = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+  let r = n * p; if (int) r = Math.max(Math.ceil(r), 2); if (int && r % 2) r++;
+  return r;
+}
 function barChart(labels, vals, o = {}) {
-  const W = 320, h = o.h || 140, P = { l: 36, r: 6, t: 10, b: 22 };
-  const max = Math.max(1, ...vals), n = vals.length, bw = (W - P.l - P.r) / n;
+  const W = 320, h = o.h || 150, P = { l: 38, r: 8, t: 12, b: 24 };
+  const max = niceMax(Math.max(...vals, 0), o.int), n = vals.length, bw = (W - P.l - P.r) / n;
   const f = o.fmt || ((v) => num(v, 0));
   let g = '';
-  for (let i = 0; i <= 2; i++) { const v = max * i / 2, y = P.t + (1 - i / 2) * (h - P.t - P.b); g += `<line class="grid" x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}"/><text x="${P.l - 4}" y="${y + 3}" text-anchor="end">${f(v)}</text>`; }
+  for (let i = 0; i <= 2; i++) { const v = max * i / 2, y = P.t + (1 - i / 2) * (h - P.t - P.b); g += `<line class="grid" x1="${P.l}" x2="${W - P.r}" y1="${y}" y2="${y}"/><text x="${P.l - 5}" y="${y + 3.5}" text-anchor="end">${f(v)}</text>`; }
+  const every = Math.ceil(n / 4); // at most ~4 date labels so they never overlap
   vals.forEach((v, i) => {
     const bh = (h - P.t - P.b) * v / max, x = P.l + i * bw + bw * 0.15;
-    g += `<rect class="bar" x="${x.toFixed(1)}" y="${(h - P.b - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${Math.max(0, bh).toFixed(1)}" rx="2"${i === n - 1 ? '' : ' opacity=".75"'}/>`;
-    if (labels[i] && (n <= 12 || i % 2 === 0)) g += `<text x="${(x + bw * 0.35).toFixed(1)}" y="${h - 6}" text-anchor="middle">${esc(labels[i])}</text>`;
+    g += `<rect class="bar" x="${x.toFixed(1)}" y="${(h - P.b - bh).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${Math.max(0, bh).toFixed(1)}" rx="2.5"${i === n - 1 ? '' : ' opacity=".75"'}><title>${esc(labels[i] || '')}: ${f(v)}</title></rect>`;
+    if (v > 0 && o.values) g += `<text x="${(x + bw * 0.35).toFixed(1)}" y="${(h - P.b - bh - 3).toFixed(1)}" text-anchor="middle" style="fill:var(--text);font-size:9px">${f(v)}</text>`;
+    if (labels[i] && ((n - 1 - i) % every === 0)) g += `<text x="${(x + bw * 0.35).toFixed(1)}" y="${h - 7}" text-anchor="middle">${esc(labels[i])}</text>`;
   });
   return `<svg class="chart" viewBox="0 0 ${W} ${h}">${g}</svg>`;
 }
@@ -574,7 +583,7 @@ function render() {
   const changed = prev !== t;
   if (changed && prev && document.startViewTransition && !reduceMotion()) {
     document.documentElement.dataset.dir = TABS.indexOf(t) >= TABS.indexOf(prev) ? 'fwd' : 'back';
-    document.startViewTransition(() => renderNow(changed));
+    try { const vt = document.startViewTransition(() => renderNow(changed)); [vt.ready, vt.finished, vt.updateCallbackDone].forEach((pr) => pr && pr.catch(() => {})); } catch (e) { renderNow(changed); }
   } else renderNow(changed);
 }
 function renderNow(changed) {
@@ -844,10 +853,10 @@ STATS.overview = () => {
     const a = ws0 - i * 7 * DAY, b = a + 7 * DAY;
     const ww = W.filter((w) => w.start >= a && w.start < b);
     weeks.push(toU(ww.reduce((s, w) => s + wVolume(w), 0))); counts.push(ww.length);
-    labels.push(fmtDate(a, { day: 'numeric', month: 'numeric' }));
+    labels.push(fmtDate(a, { day: 'numeric', month: 'short' }));
   }
   html += `<h3>Weekly volume (${U()})</h3><div class="card">${barChart(labels, weeks, { fmt: (v) => (v >= 1000 ? num(v / 1000, 1) + 'k' : num(v, 0)) })}</div>`;
-  html += `<h3>Sessions per week</h3><div class="card">${barChart(labels, counts, { h: 110 })}</div>`;
+  html += `<h3>Sessions per week</h3><div class="card">${barChart(labels, counts, { h: 120, int: true, values: true })}</div><p class="tiny faint" style="margin:-6px 4px 0">Each bar is one week, labelled with the week's first day.</p>`;
   // Badges
   const hasEarly = W.some((w) => new Date(w.start).getHours() < 7), hasLate = W.some((w) => new Date(w.start).getHours() >= 21), long = W.some((w) => wDur(w) >= 7200e3);
   const B = [
@@ -883,10 +892,12 @@ STATS.muscles = () => {
   let html = `<div class="seg" style="margin-bottom:12px">${Object.entries(modes).map(([k, v]) => `<button class="${UI.muscleMode === k ? 'on' : ''}" data-act="muscleMode" data-v="${k}">${v}</button>`).join('')}</div>`;
   const ms = Object.keys(MUSCLES).filter((m) => m !== 'cardio');
   if (UI.muscleMode === 'balance') {
-    const sets = muscleSets(7), vals = {};
-    ms.forEach((m) => { vals[m] = Math.min(1, sets[m] / 20); });
+    if (!UI.balDays) { const s7 = muscleSets(7); UI.balDays = Object.values(s7).some((v) => v > 0) ? 7 : 28; if (UI.balDays === 28 && !Object.values(muscleSets(28)).some((v) => v > 0)) UI.balDays = 84; }
+    const days = UI.balDays, raw = muscleSets(days), sets = {}, vals = {};
+    ms.forEach((m) => { sets[m] = raw[m] / (days / 7); vals[m] = Math.min(1, sets[m] / 20); });
+    html += `<div class="chips">${[[7, 'Last 7 days'], [28, 'Last 4 weeks'], [84, 'Last 12 weeks']].map(([d, l]) => `<button class="chip ${days === d ? 'on' : ''}" data-act="balDays" data-v="${d}">${l}</button>`).join('')}</div>`;
     const low = ms.filter((m) => sets[m] < 10).sort((a, b) => sets[a] - sets[b]);
-    html += `<div class="card">${bodyMap(vals, 'balance')}</div><div class="card"><div class="small">Hard sets per muscle, last 7 days. Secondary muscles count as ½ set. Shaded zone = 10–20 sets, a common hypertrophy target.</div>${low.length ? `<div class="small mt">Gaps: <b class="accent">${low.slice(0, 5).map((m) => MUSCLES[m]).join(', ')}</b></div>` : ''}<div class="bars mt">${ms.sort((a, b) => sets[b] - sets[a]).map((m) => `<div class="b"><div class="n">${MUSCLES[m]}</div><div class="track"><div class="zone" style="left:${10 / 25 * 100}%;width:${10 / 25 * 100}%"></div><div class="fill" style="width:${Math.min(100, sets[m] / 25 * 100)}%"></div></div><div class="v">${num(sets[m], 1)}</div></div>`).join('')}</div></div>`;
+    html += `<div class="card">${bodyMap(vals, 'balance')}</div><div class="card"><div class="small">${days === 7 ? 'Hard sets per muscle, last 7 days' : `Average hard sets per muscle <b>per week</b> over the last ${days / 7} weeks`}. Secondary muscles count as ½ set. Shaded zone = 10–20 sets, a common hypertrophy target.</div>${low.length ? `<div class="small mt">Gaps: <b class="accent">${low.slice(0, 5).map((m) => MUSCLES[m]).join(', ')}</b></div>` : ''}<div class="bars mt">${ms.sort((a, b) => sets[b] - sets[a]).map((m) => `<div class="b"><div class="n">${MUSCLES[m]}</div><div class="track"><div class="zone" style="left:${10 / 25 * 100}%;width:${10 / 25 * 100}%"></div><div class="fill" style="width:${Math.min(100, sets[m] / 25 * 100)}%"></div></div><div class="v">${num(sets[m], 1)}</div></div>`).join('')}</div></div>`;
   } else if (UI.muscleMode === 'fatigue') {
     const f = muscleFatigue();
     html += `<div class="card">${bodyMap(f, 'fatigue')}</div><div class="card"><div class="small">Recovery estimate from the last 7 days. Each set's effect fades over ~2–3 days; sets near failure (low RIR / high RPE) count more.</div><div class="bars mt">${ms.sort((a, b) => f[b] - f[a]).map((m) => `<div class="b"><div class="n">${MUSCLES[m]}</div><div class="track"><div class="fill" style="width:${Math.round((1 - f[m]) * 100)}%;background:${f[m] > 0.6 ? 'var(--bad)' : f[m] > 0.3 ? 'var(--warn)' : 'var(--good)'}"></div></div><div class="v">${Math.round((1 - f[m]) * 100)}%</div></div>`).join('')}</div><p class="tiny faint">% = estimated recovery.</p></div>`;
@@ -1125,7 +1136,7 @@ function settingsSheet() {
       h += `<div class="list">${sw('sound', 'Rest timer sound', 'Plays when the app is open. iPhone silent mode mutes it.')}${sw('keepAwake', 'Keep screen awake during workouts')}</div>`;
       h += `<h3>Appearance</h3><div class="card"><div class="field">${seg('theme', [['dark', 'Dark'], ['light', 'Light'], ['auto', 'Auto']])}</div><div class="swatches">${accents.map((c) => `<button class="swatch ${s.accent === c ? 'on' : ''}" style="background:${c}" data-act="setOpt" data-k="accent" data-v="${c}" aria-label="${c}"></button>`).join('')}<label class="swatch ${accents.includes(s.accent) ? '' : 'on'}" style="background:conic-gradient(red,yellow,lime,cyan,blue,magenta,red);position:relative;overflow:hidden"><input type="color" data-on="setAccent" value="${s.accent}" style="opacity:0;position:absolute;inset:0"></label></div></div>`;
       h += `<h3>Your data</h3><div class="card small"><div id="storage-info" class="muted">Checking storage…</div><div class="muted mt">Everything is stored only on this device, inside this app. Deleting the app from your Home Screen deletes the data — back up regularly.</div></div>`;
-      h += `<div class="list"><button class="list-item" data-act="exportJSON"><div class="grow"><div>Back up (JSON)</div><div class="sub">${S.meta.lastBackup ? 'Last: ' + relDay(S.meta.lastBackup) : 'Never backed up'}</div></div><span class="chev">›</span></button><button class="list-item" data-act="importJSON"><div class="grow"><div>Restore / merge backup</div><div class="sub">Merges — never overwrites existing workouts</div></div><span class="chev">›</span></button><button class="list-item" data-act="exportCSV"><div class="grow">Export workouts (CSV)</div><span class="chev">›</span></button><button class="list-item" data-act="importCSV"><div class="grow"><div>Import from Strong, Hevy or FitNotes</div><div class="sub">CSV export from those apps</div></div><span class="chev">›</span></button><button class="list-item" data-act="persist"><div class="grow">Ask the browser to protect storage</div><span class="chev">›</span></button><button class="list-item" data-act="cacheImages"><div class="grow"><div>Save all exercise photos for offline</div><div class="sub">~4 MB. Photos you open are saved automatically</div></div><span class="chev">›</span></button></div>`;
+      h += `<div class="list"><button class="list-item" data-act="exportJSON"><div class="grow"><div>Back up (JSON)</div><div class="sub">${S.meta.lastBackup ? 'Last: ' + relDay(S.meta.lastBackup) : 'Never backed up'}</div></div><span class="chev">›</span></button><button class="list-item" data-act="importJSON"><div class="grow"><div>Restore / merge backup</div><div class="sub">Merges — never overwrites existing workouts</div></div><span class="chev">›</span></button><button class="list-item" data-act="exportCSV"><div class="grow">Export workouts (CSV)</div><span class="chev">›</span></button><button class="list-item" data-act="importCSV"><div class="grow"><div>Import from Strong, Hevy or FitNotes</div><div class="sub">CSV export from those apps</div></div><span class="chev">›</span></button><button class="list-item" data-act="repairImport"><div class="grow"><div>Re-check imported exercises</div><div class="sub">Match names to the library, fix muscle groups, build routines from your history</div></div><span class="chev">›</span></button><button class="list-item" data-act="persist"><div class="grow">Ask the browser to protect storage</div><span class="chev">›</span></button><button class="list-item" data-act="cacheImages"><div class="grow"><div>Save all exercise photos for offline</div><div class="sub">~4 MB. Photos you open are saved automatically</div></div><span class="chev">›</span></button></div>`;
       h += `<div class="list"><button class="list-item" data-act="loadDemo"><div class="grow"><div>Load demo data</div><div class="sub">10 weeks of sample training to explore the app</div></div></button><button class="list-item" data-act="eraseAll"><div class="grow bad">Erase this profile's data</div></button></div>`;
       h += `<p class="tiny faint center">Forge v1.0 · no account, no tracking, no network calls.<br>Inspired by openGym.</p>`;
       return h;
@@ -1461,25 +1472,136 @@ function csvParse(text) {
   const head = rows.shift().map((h) => h.trim());
   return rows.filter((r) => r.length > 1).map((r) => Object.fromEntries(head.map((h, i) => [h, (r[i] || '').trim()])));
 }
-const ALIASES = { 'squat': 'Back Squat', 'squat (barbell)': 'Back Squat', 'barbell squat': 'Back Squat', 'bench press (barbell)': 'Bench Press', 'flat barbell bench press': 'Bench Press', 'deadlift (barbell)': 'Deadlift', 'conventional deadlift': 'Deadlift', 'overhead press (barbell)': 'Overhead Press', 'military press': 'Overhead Press', 'strict press': 'Overhead Press', 'bent over row (barbell)': 'Barbell Row', 'bent over row': 'Barbell Row', 'pull up': 'Pull-Up', 'pullup': 'Pull-Up', 'chin up': 'Chin-Up', 'lat pulldown (cable)': 'Lat Pulldown', 'bicep curl (barbell)': 'Barbell Curl', 'bicep curl (dumbbell)': 'Dumbbell Curl', 'triceps pushdown (cable - straight bar)': 'Triceps Pushdown', 'leg press (machine)': 'Leg Press', 'romanian deadlift (barbell)': 'Romanian Deadlift', 'incline bench press (barbell)': 'Incline Bench Press', 'hip thrust (barbell)': 'Hip Thrust', 'lateral raise (dumbbell)': 'Lateral Raise', 'seated row (cable)': 'Seated Cable Row', 'front squat (barbell)': 'Front Squat', 'running': 'Outdoor Run', 'running (treadmill)': 'Treadmill Run', 'cycling': 'Stationary Bike', 'rowing (machine)': 'Rowing Machine' };
+/* Map exercise names from Hevy / Strong / FitNotes to Forge's library. */
+const EQ_WORDS = { barbell: 'barbell', dumbbell: 'dumbbell', dumbbells: 'dumbbell', db: 'dumbbell', machine: 'machine', cable: 'cable', cables: 'cable', smith: 'smith', 'smith machine': 'smith', 'ez bar': 'ezbar', ezbar: 'ezbar', kettlebell: 'kettlebell', band: 'band', bands: 'band', bodyweight: 'bodyweight', 'body weight': 'bodyweight', weighted: 'bodyweight', assisted: 'machine', 'trap bar': 'trapbar', landmine: 'landmine', plate: 'other', 'pec deck': 'machine' };
+const ALIASES = {
+  'squat': 'Back Squat', 'squat barbell': 'Back Squat', 'barbell squat': 'Back Squat', 'back squat': 'Back Squat', 'full squat': 'Back Squat', 'squat smith machine': 'Smith Squat', 'squat machine': 'Hack Squat', 'pendulum squat machine': 'Hack Squat', 'belt squat machine': 'Hack Squat',
+  'bench press': 'Bench Press', 'bench press barbell': 'Bench Press', 'flat barbell bench press': 'Bench Press', 'bench press dumbbell': 'Dumbbell Bench Press', 'bench press machine': 'Machine Chest Press', 'chest press machine': 'Machine Chest Press', 'chest press': 'Machine Chest Press', 'bench press smith machine': 'Smith Incline Press', 'bench press close grip barbell': 'Close-Grip Bench Press', 'close grip bench press': 'Close-Grip Bench Press',
+  'incline bench press barbell': 'Incline Bench Press', 'incline bench press dumbbell': 'Incline Dumbbell Press', 'incline chest press machine': 'Machine Chest Press', 'incline bench press smith machine': 'Smith Incline Press', 'decline bench press barbell': 'Decline Bench Press',
+  'chest fly machine': 'Pec Deck', 'butterfly pec deck': 'Pec Deck', 'pec deck': 'Pec Deck', 'chest fly dumbbell': 'Dumbbell Fly', 'chest fly': 'Dumbbell Fly', 'incline chest fly dumbbell': 'Incline Dumbbell Fly', 'cable fly crossovers': 'Cable Crossover', 'cable crossover': 'Cable Crossover', 'chest fly cable': 'Cable Crossover', 'low cable fly crossovers': 'Low-to-High Cable Fly', 'chest dip': 'Chest Dip', 'chest dip weighted': 'Weighted Dip', 'triceps dip': 'Bench Dip', 'bench dip': 'Bench Dip', 'push up': 'Push-Up', 'pushup': 'Push-Up', 'diamond push up': 'Diamond Push-Up',
+  'deadlift': 'Deadlift', 'deadlift barbell': 'Deadlift', 'conventional deadlift': 'Deadlift', 'deadlift trap bar': 'Trap Bar Deadlift', 'trap bar deadlift': 'Trap Bar Deadlift', 'sumo deadlift': 'Sumo Deadlift', 'romanian deadlift barbell': 'Romanian Deadlift', 'romanian deadlift dumbbell': 'Dumbbell Romanian Deadlift', 'romanian deadlift': 'Romanian Deadlift', 'straight leg deadlift': 'Stiff-Leg Deadlift', 'stiff leg deadlift': 'Stiff-Leg Deadlift', 'rack pull': 'Rack Pull', 'good morning barbell': 'Good Morning', 'back extension hyperextension': 'Back Extension', 'back extension': 'Back Extension', 'hyperextension': 'Back Extension',
+  'overhead press barbell': 'Overhead Press', 'overhead press': 'Overhead Press', 'military press': 'Overhead Press', 'strict press': 'Overhead Press', 'shoulder press dumbbell': 'Seated Dumbbell Press', 'seated shoulder press dumbbell': 'Seated Dumbbell Press', 'overhead press dumbbell': 'Seated Dumbbell Press', 'shoulder press machine': 'Machine Shoulder Press', 'shoulder press plate loaded': 'Machine Shoulder Press', 'seated overhead press barbell': 'Overhead Press', 'arnold press dumbbell': 'Arnold Press', 'push press': 'Push Press', 'landmine press': 'Landmine Press',
+  'lateral raise dumbbell': 'Lateral Raise', 'lateral raise': 'Lateral Raise', 'lateral raise cable': 'Cable Lateral Raise', 'single arm lateral raise cable': 'Cable Lateral Raise', 'lateral raise machine': 'Machine Lateral Raise', 'front raise dumbbell': 'Front Raise', 'front raise cable': 'Front Raise', 'rear delt reverse fly dumbbell': 'Rear Delt Fly', 'rear delt reverse fly machine': 'Reverse Pec Deck', 'rear delt reverse fly cable': 'Rear Delt Fly', 'reverse fly': 'Rear Delt Fly', 'face pull': 'Face Pull', 'upright row barbell': 'Upright Row', 'upright row cable': 'Upright Row', 'upright row dumbbell': 'Upright Row',
+  'bent over row barbell': 'Barbell Row', 'bent over row': 'Barbell Row', 'barbell row': 'Barbell Row', 'pendlay row barbell': 'Pendlay Row', 'bent over row dumbbell': 'One-Arm Dumbbell Row', 'dumbbell row': 'One-Arm Dumbbell Row', 'single arm dumbbell row': 'One-Arm Dumbbell Row', 'seated cable row v grip cable': 'Seated Cable Row', 'seated cable row bar grip': 'Seated Cable Row', 'seated row cable': 'Seated Cable Row', 'seated cable row': 'Seated Cable Row', 'seated row machine': 'Machine Row', 'iso lateral row machine': 'Machine Row', 'iso lateral low row': 'Machine Row', 't bar row': 'T-Bar Row', 'chest supported incline row dumbbell': 'Chest-Supported Row', 'chest supported row': 'Chest-Supported Row', 'inverted row': 'Inverted Row', 'meadows rows barbell': 'Landmine Row',
+  'lat pulldown cable': 'Lat Pulldown', 'lat pulldown': 'Lat Pulldown', 'lat pulldown machine': 'Lat Pulldown', 'lat pulldown close grip cable': 'Close-Grip Lat Pulldown', 'lat pulldown band': 'Lat Pulldown', 'single arm lat pulldown': 'Lat Pulldown', 'straight arm lat pulldown cable': 'Straight-Arm Pulldown', 'pull up': 'Pull-Up', 'pullup': 'Pull-Up', 'pull up weighted': 'Weighted Pull-Up', 'pull up assisted': 'Assisted Pull-Up', 'chin up': 'Chin-Up', 'chin up weighted': 'Weighted Chin-Up', 'chin up assisted': 'Assisted Pull-Up', 'shrug dumbbell': 'Dumbbell Shrug', 'shrug barbell': 'Barbell Shrug', 'shrug machine': 'Barbell Shrug', 'shrug smith machine': 'Barbell Shrug',
+  'bicep curl dumbbell': 'Dumbbell Curl', 'bicep curl barbell': 'Barbell Curl', 'bicep curl cable': 'Cable Curl', 'bicep curl machine': 'Preacher Curl', 'ez bar biceps curl': 'EZ-Bar Curl', 'bicep curl ez bar': 'EZ-Bar Curl', 'hammer curl dumbbell': 'Hammer Curl', 'hammer curl cable': 'Hammer Curl', 'hammer curl': 'Hammer Curl', 'preacher curl barbell': 'Preacher Curl', 'preacher curl dumbbell': 'Preacher Curl', 'preacher curl machine': 'Preacher Curl', 'concentration curl': 'Concentration Curl', 'incline curl dumbbell': 'Incline Dumbbell Curl', 'spider curl': 'Spider Curl', 'reverse curl barbell': 'Reverse Curl',
+  'triceps pushdown': 'Triceps Pushdown', 'triceps rope pushdown': 'Rope Pushdown', 'triceps pushdown cable straight bar': 'Triceps Pushdown', 'skullcrusher barbell': 'Skull Crusher', 'skullcrusher dumbbell': 'Skull Crusher', 'skull crusher': 'Skull Crusher', 'triceps extension dumbbell': 'Overhead Dumbbell Extension', 'overhead triceps extension cable': 'Overhead Cable Extension', 'triceps extension cable': 'Overhead Cable Extension', 'triceps kickback dumbbell': 'Dumbbell Kickback', 'triceps extension barbell': 'Skull Crusher',
+  'leg press machine': 'Leg Press', 'leg press': 'Leg Press', 'leg press horizontal machine': 'Leg Press', 'hack squat machine': 'Hack Squat', 'hack squat': 'Hack Squat', 'goblet squat': 'Goblet Squat', 'front squat': 'Front Squat', 'bulgarian split squat': 'Bulgarian Split Squat', 'split squat dumbbell': 'Bulgarian Split Squat', 'lunge dumbbell': 'Walking Lunge', 'walking lunge dumbbell': 'Walking Lunge', 'lunge barbell': 'Walking Lunge', 'lunge': 'Walking Lunge', 'reverse lunge dumbbell': 'Reverse Lunge', 'reverse lunge': 'Reverse Lunge', 'step up': 'Step-Up', 'leg extension machine': 'Leg Extension', 'leg extension': 'Leg Extension', 'lying leg curl machine': 'Lying Leg Curl', 'seated leg curl machine': 'Seated Leg Curl', 'leg curl': 'Lying Leg Curl', 'nordic hamstrings curls': 'Nordic Curl',
+  'hip thrust barbell': 'Hip Thrust', 'hip thrust machine': 'Hip Thrust', 'hip thrust smith machine': 'Hip Thrust', 'hip thrust': 'Hip Thrust', 'glute bridge': 'Glute Bridge', 'hip abduction machine': 'Hip Abduction Machine', 'hip adduction machine': 'Hip Adduction Machine', 'cable pull through': 'Cable Pull-Through', 'kettlebell swing': 'Kettlebell Swing',
+  'standing calf raise machine': 'Standing Calf Raise', 'standing calf raise smith machine': 'Standing Calf Raise', 'standing calf raise': 'Standing Calf Raise', 'calf raise': 'Standing Calf Raise', 'seated calf raise': 'Seated Calf Raise', 'calf press machine': 'Leg Press Calf Raise', 'single leg standing calf raise': 'Single-Leg Calf Raise',
+  'plank': 'Plank', 'side plank': 'Side Plank', 'crunch': 'Crunch', 'crunch machine': 'Cable Crunch', 'cable crunch': 'Cable Crunch', 'hanging leg raise': 'Hanging Leg Raise', 'hanging knee raise': 'Hanging Knee Raise', 'knee raise parallel bars': 'Hanging Knee Raise', 'leg raise parallel bars': 'Hanging Leg Raise', 'lying leg raise': 'Hanging Knee Raise', 'russian twist weighted': 'Russian Twist', 'russian twist bodyweight': 'Russian Twist', 'ab wheel': 'Ab Wheel Rollout', 'decline crunch': 'Decline Sit-Up', 'sit up': 'Decline Sit-Up', 'bicycle crunch': 'Bicycle Crunch', 'v up': 'V-Up', 'dead bug': 'Dead Bug', 'mountain climber': 'Mountain Climber', 'pallof press': 'Pallof Press', 'cable core palloff press': 'Pallof Press', 'toes to bar': 'Toes-to-Bar', 'dragon flag': 'Dragon Flag', 'farmers walk': "Farmer's Carry", 'suitcase carry': 'Suitcase Carry', 'dead hang': 'Dead Hang', 'l sit hold': 'L-Sit', 'hollow body hold': 'Hollow Hold', 'burpee': 'Burpee', 'box jump': 'Box Jump', 'jump squat': 'Squat Jump', 'jumping jack': 'Jumping Jacks',
+  'running': 'Outdoor Run', 'running treadmill': 'Treadmill Run', 'treadmill': 'Treadmill Run', 'walking': 'Incline Treadmill Walk', 'cycling': 'Stationary Bike', 'spinning': 'Stationary Bike', 'air bike': 'Assault Bike', 'rowing machine': 'Rowing Machine', 'rowing': 'Rowing Machine', 'elliptical trainer': 'Elliptical', 'stair machine': 'Stair Climber', 'stairmaster': 'Stair Climber', 'jump rope': 'Jump Rope', 'swimming': 'Swimming', 'battle ropes': 'Battle Ropes', 'sled push': 'Sled Push'
+};
+const normName = (n) => n.toLowerCase().replace(/[’']/g, '').replace(/[()\[\],/]/g, ' ').replace(/[-_.]/g, ' ').replace(/\s+/g, ' ').trim();
+const STOP = new Set(['the', 'with', 'on', 'a', 'of', 'and', 'grip', 'exercise', 'standing', 'seated', 'lying', 'single', 'arm', 'one', 'two', 'alternating', 'wide', 'narrow', 'close', 'neutral', 'reverse']);
+const SYN = { bicep: 'curl', biceps: 'curl', tricep: 'triceps', skullcrusher: 'skull crusher', pullup: 'pull up', chinup: 'chin up', pushup: 'push up', pulldown: 'pulldown', rdl: 'romanian deadlift', ohp: 'overhead press', dl: 'deadlift', flye: 'fly', flyes: 'fly', flys: 'fly', raises: 'raise', curls: 'curl', rows: 'row', presses: 'press', lunges: 'lunge', squats: 'squat', extensions: 'extension', crunches: 'crunch', 'pec': 'pec', deck: 'deck' };
+function splitName(raw) {
+  let eq = null;
+  const m = raw.match(/\(([^)]+)\)/g) || [];
+  for (const g of m) { const w = normName(g); for (const k of Object.keys(EQ_WORDS).sort((a, b) => b.length - a.length)) if (w.includes(k)) { eq = EQ_WORDS[k]; break; } }
+  const base = normName(raw.replace(/\([^)]*\)/g, ' '));
+  if (!eq) for (const k of Object.keys(EQ_WORDS).sort((a, b) => b.length - a.length)) if ((' ' + base + ' ').includes(' ' + k + ' ')) { eq = EQ_WORDS[k]; break; }
+  return { base, eq, full: normName(raw) };
+}
+const toks = (s) => new Set(s.split(' ').map((t) => SYN[t] || t).join(' ').split(' ').filter((t) => t && t.length > 1 && !STOP.has(t) && !EQ_WORDS[t]));
+function matchLibrary(raw) {
+  const { base, eq, full } = splitName(raw);
+  const direct = ALIASES[full] || ALIASES[base + (eq ? ' ' + eq : '')] || ALIASES[base];
+  if (direct && exByName(direct)) {
+    let ex = exByName(direct);
+    if (eq && ex.equipment !== eq && ALIASES[base] === direct) { // same movement, different tool: look for a sibling with that equipment
+      const sib = (PATTERNS[PATTERN_OF[ex.id]] || []).map(exByName).find((e) => e && e.equipment === eq);
+      if (sib) ex = sib;
+    }
+    return ex;
+  }
+  const it = toks(base); if (!it.size) return null;
+  let best = null, bestScore = 0;
+  for (const ex of EX_LIST) {
+    if (ex.custom || ex.type === 'mobility') continue;
+    const lt = toks(normName(ex.name));
+    let inter = 0; it.forEach((t) => { if (lt.has(t)) inter++; });
+    if (!inter) continue;
+    if (inter / it.size < 0.6) continue; // most of the imported name must be explained
+    let sc = inter / (it.size + lt.size - inter);
+    if (eq) sc += ex.equipment === eq ? 0.2 : ['bodyweight', 'other'].includes(ex.equipment) ? -0.05 : -0.12;
+    if (sc > bestScore) { bestScore = sc; best = ex; }
+  }
+  return bestScore >= 0.5 ? best : null;
+}
+const MUSCLE_KEYWORDS = [
+  [/calf|calves/, 'calves'], [/leg curl|hamstring|nordic|glute ham/, 'hamstrings'], [/hip thrust|glute|abduct|kickback.*(cable|glute)|donkey/, 'glutes'], [/adduct/, 'adductors'],
+  [/squat|leg press|lunge|leg extension|step up|split squat|hack|sissy|wall sit/, 'quads'], [/deadlift|good morning|back extension|hyperextension|superman/, 'lowerback'],
+  [/pulldown|pull up|pullup|chin|lat |lats|pullover|straight arm/, 'lats'], [/row|rhomboid|reverse fly|rear delt|face pull/, 'upperback'], [/shrug|trap/, 'traps'],
+  [/lateral raise|side raise|upright row/, 'sidedelts'], [/rear delt|reverse fly|face pull/, 'reardelts'], [/shoulder press|overhead press|military|arnold|front raise|landmine press|push press/, 'frontdelts'],
+  [/bench|chest|fly|flye|pec|push up|pushup|dip/, 'chest'], [/\bpress\b/, 'frontdelts'], [/carry|farmer/, 'forearms'], [/tricep|pushdown|skull|kickback|extension|close grip/, 'triceps'], [/curl|bicep|chin/, 'biceps'], [/wrist|forearm|grip|farmer|hang/, 'forearms'],
+  [/oblique|twist|woodchop|side bend|pallof|side plank/, 'obliques'], [/crunch|sit up|situp|ab |abs|core|plank|leg raise|knee raise|hollow|v up|toes to bar|dead bug|ab wheel|rollout/, 'abs'],
+  [/run|jog|treadmill|bike|cycl|row(ing)? machine|erg|elliptical|stair|walk|swim|rope|sprint|cardio|hiit/, 'cardio']
+];
+const SECONDARY = { chest: ['triceps', 'frontdelts'], lats: ['biceps', 'upperback'], upperback: ['lats', 'biceps', 'reardelts'], frontdelts: ['triceps', 'sidedelts'], quads: ['glutes', 'adductors'], hamstrings: ['glutes'], glutes: ['hamstrings'], lowerback: ['glutes', 'hamstrings'], biceps: ['forearms'], triceps: [], sidedelts: ['traps'], abs: ['obliques'] };
 function guessMuscle(n) {
-  n = n.toLowerCase();
-  const map = [['curl', 'biceps'], ['tricep', 'triceps'], ['pushdown', 'triceps'], ['extension', 'triceps'], ['squat', 'quads'], ['leg press', 'quads'], ['lunge', 'quads'], ['deadlift', 'lowerback'], ['row', 'upperback'], ['pull', 'lats'], ['chin', 'lats'], ['bench', 'chest'], ['fly', 'chest'], ['chest', 'chest'], ['press', 'frontdelts'], ['raise', 'sidedelts'], ['calf', 'calves'], ['glute', 'glutes'], ['hip', 'glutes'], ['leg curl', 'hamstrings'], ['crunch', 'abs'], ['plank', 'abs'], ['run', 'cardio'], ['bike', 'cardio'], ['row machine', 'cardio']];
-  for (const [k, m] of map) if (n.includes(k)) return m;
+  const s = ' ' + normName(n) + ' ';
+  if (/row(ing)? machine|rowing|erg/.test(s)) return 'cardio';
+  for (const [re, m] of MUSCLE_KEYWORDS) if (re.test(s)) return m;
   return 'abs';
+}
+function guessExercise(name) {
+  const { base, eq } = splitName(name), s = ' ' + base + ' ';
+  const muscle = guessMuscle(name);
+  const type = muscle === 'cardio' ? 'cardio' : /plank|hold|hang|carry|wall sit/.test(s) ? 'timed' : eq ? 'weight' : /push up|pull up|chin up|dip|crunch|sit up|leg raise|burpee/.test(s) ? 'bodyweight' : 'weight';
+  return { muscle, secondary: (SECONDARY[muscle] || []).filter((m) => m !== muscle), equipment: eq || (type === 'cardio' ? 'cardio' : type === 'bodyweight' ? 'bodyweight' : 'other'), type };
 }
 function resolveExercise(name, created) {
   const n = name.trim(), l = n.toLowerCase();
-  if (ALIASES[l]) return exByName(ALIASES[l]).id;
-  let ex = exByName(n); if (ex) return ex.id;
-  const stripped = n.replace(/\s*\(.*?\)\s*/g, ' ').trim(); ex = exByName(stripped); if (ex) return ex.id;
-  if (ALIASES[stripped.toLowerCase()]) return exByName(ALIASES[stripped.toLowerCase()]).id;
+  const lib = matchLibrary(n); if (lib) return lib.id;
   const c = S.custom.find((x) => x.name.toLowerCase() === l); if (c) return c.id;
   if (created[l]) return created[l];
-  const m = guessMuscle(n);
-  const nc = { id: 'c:' + uid(), name: n, muscle: m, secondary: [], equipment: /dumbbell/i.test(n) ? 'dumbbell' : /cable/i.test(n) ? 'cable' : /machine/i.test(n) ? 'machine' : /barbell/i.test(n) ? 'barbell' : 'other', type: m === 'cardio' ? 'cardio' : 'weight', notes: 'Imported' };
+  const g = guessExercise(n);
+  const nc = { id: 'c:' + uid(), name: n, ...g, notes: 'Imported' };
   S.custom.push(nc); EX[nc.id] = { ...nc, custom: true }; created[l] = nc.id;
   return nc.id;
+}
+/* Fix exercises created by older imports: link them to the library where possible, otherwise re-detect muscles. */
+function repairImported() {
+  let linked = 0, fixed = 0; const remap = {};
+  for (const c of [...S.custom]) {
+    if (c.notes !== 'Imported') continue;
+    const lib = matchLibrary(c.name);
+    if (lib) { remap[c.id] = lib.id; S.custom = S.custom.filter((x) => x.id !== c.id); linked++; continue; }
+    const g = guessExercise(c.name);
+    if (g.muscle !== c.muscle || g.type !== c.type || JSON.stringify(g.secondary) !== JSON.stringify(c.secondary)) { Object.assign(c, g); fixed++; }
+  }
+  if (Object.keys(remap).length) {
+    for (const w of S.workouts) for (const e of w.entries) if (remap[e.exId]) e.exId = remap[e.exId];
+    for (const r of S.routines) for (const it of r.items) if (remap[it.exId]) it.exId = remap[it.exId];
+    if (S.active) for (const e of S.active.entries) if (remap[e.exId]) e.exId = remap[e.exId];
+  }
+  if (linked || fixed) { buildEx(); save('custom', 'workouts', 'routines', 'active'); }
+  return { linked, fixed };
+}
+/* Turn imported workout history (e.g. Hevy routines) into Forge routines. */
+function routinesFromHistory() {
+  const byName = new Map();
+  for (const w of S.workouts) { if (w.routineId && S.routines.some((r) => r.id === w.routineId)) continue; const k = (w.name || '').trim(); if (!k || k === 'Workout') continue; if (!byName.has(k)) byName.set(k, []); byName.get(k).push(w); }
+  let made = 0;
+  for (const [name, ws] of byName) {
+    if (ws.length < 2 || S.routines.some((r) => r.name.toLowerCase() === name.toLowerCase())) continue;
+    const latest = ws.slice(0, 4).reduce((a, b) => (b.entries.length > a.entries.length ? b : a), ws[0]);
+    const r = { id: uid(), name, prog: 'double', items: [], created: Date.now(), block: { start: latest.start, n: 1, scheme: 'hyp' }, imported: true };
+    latest.entries.forEach((e, i, E) => {
+      const ex = getEx(e.exId), work = e.sets.filter((s) => !s.warm && s.tech !== 'drop'), reps = work.map((s) => s.r || 0).filter(Boolean);
+      const it = { exId: e.exId, sets: Math.max(1, work.length), phase: ex.type === 'mobility' ? 'warmup' : 'main' };
+      if (['timed', 'mobility'].includes(ex.type)) it.time = Math.max(...work.map((s) => s.t || 0)) || 30;
+      else if (ex.type !== 'cardio') { it.repMin = reps.length ? Math.min(...reps) : 8; it.repMax = reps.length ? Math.max(it.repMin, Math.max(...reps)) : 12; }
+      if (e.ss && E[i + 1] && E[i + 1].ss === e.ss) it.ss = true;
+      if (e.dbMode) it.dbMode = e.dbMode;
+      r.items.push(it);
+    });
+    if (!r.items.length) continue;
+    S.routines.push(r); ws.forEach((w) => { w.routineId = r.id; }); made++;
+  }
+  if (made) save('routines', 'workouts');
+  return made;
 }
 function parseDateLoose(s) {
   if (!s) return NaN;
@@ -1500,7 +1622,7 @@ function importCSV(text) {
     let key, start, end = null, name, exName, w = null, reps = null, t = null, d = null, rpe = null, warm = false;
     if (fmt === 'hevy') {
       start = parseDateLoose(r.start_time); end = parseDateLoose(r.end_time); name = r.title; exName = r.exercise_title;
-      w = r.weight_kg ? pnum(r.weight_kg) : r.weight_lbs ? pnum(r.weight_lbs) / LB : null; reps = pnum(r.reps); t = pnum(r.duration_seconds); d = pnum(r.distance_km); rpe = pnum(r.rpe); warm = r.set_type === 'warmup';
+      w = r.weight_kg ? pnum(r.weight_kg) : r.weight_lbs ? pnum(r.weight_lbs) / LB : null; reps = pnum(r.reps); t = pnum(r.duration_seconds); d = pnum(r.distance_km); rpe = pnum(r.rpe); warm = r.set_type === 'warmup'; var htech = r.set_type === 'dropset' ? 'drop' : r.set_type === 'failure' ? 'fail' : undefined;
       key = r.start_time + '|' + r.title;
     } else if (fmt === 'strong') {
       start = parseDateLoose(r.Date); name = r['Workout Name']; exName = r['Exercise Name'];
@@ -1524,7 +1646,8 @@ function importCSV(text) {
     if (!g._ex[exId]) { g._ex[exId] = { id: uid(), exId, ss: null, note: '', sets: [] }; g.entries.push(g._ex[exId]); }
     const ex = getEx(exId);
     if (ex.type === 'cardio' && t == null && reps == null && d == null) continue;
-    g._ex[exId].sets.push({ id: uid(), w: w || null, r: reps, t, d, eff: rpe ? { v: rpe, scale: 'rpe' } : null, warm, done: true });
+    g._ex[exId].sets.push({ id: uid(), w: w || null, r: reps, t, d, eff: rpe ? { v: rpe, scale: 'rpe' } : null, warm, done: true, tech: fmt === 'hevy' ? htech : undefined });
+    if (fmt === 'hevy' && r.superset_id && r.superset_id !== '') g._ex[exId].ss = 'hevy-' + key + '-' + r.superset_id;
   }
   let n = 0; const existing = new Set(S.workouts.map((w) => w.id));
   for (const g of groups.values()) { delete g._ex; g.entries = g.entries.filter((e) => e.sets.length); if (!g.entries.length || existing.has(g.id)) continue; S.workouts.push(g); n++; }
@@ -2467,6 +2590,7 @@ A.progApply = (d) => applyProgram(d.id);
 
 A.statsTab = (d) => { UI.statsTab = d.v; render(); };
 A.muscleMode = (d) => { UI.muscleMode = d.v; render(); };
+A.balDays = (d) => { UI.balDays = +d.v; render(); };
 A.exDetail = (d) => exDetailSheet(d.id);
 A.exTab = (d) => { topSt().tab = d.v; refreshSheet(); };
 A.galleryTap = (d, el) => { el.classList.toggle('paused'); if (el.classList.contains('paused')) el.classList.toggle('show-b', !el.classList.contains('show-b')); };
@@ -2505,7 +2629,8 @@ A.toggleOwned = (d) => { const o = S.settings.owned, i = o.indexOf(d.v); if (i >
 A.exportJSON = async () => { const ok = await download(`forge-backup-${dkey(Date.now())}.json`, exportData(), 'application/json'); if (ok) { S.meta.lastBackup = Date.now(); save('meta'); refreshSheet(); render(); toast('Backup ready'); } };
 A.importJSON = async () => { const t = await pickFile('.json,application/json'); if (!t) return; try { const n = mergeData(JSON.parse(t)); toast(`Imported ${n} new workouts`); closeAllSheets(); render(); } catch (e) { toast('Import failed: ' + e.message, 4000); } };
 A.exportCSV = () => download(`forge-workouts-${dkey(Date.now())}.csv`, exportCSV(), 'text/csv');
-A.importCSV = async () => { const t = await pickFile('.csv,text/csv,text/plain'); if (!t) return; try { const r = importCSV(t); toast(`Imported ${r.n} workouts from ${r.fmt}${r.created ? ` (+${r.created} new exercises)` : ''}`, 4000); closeAllSheets(); render(); } catch (e) { toast('Import failed: ' + e.message, 4000); } };
+A.importCSV = async () => { const t = await pickFile('.csv,text/csv,text/plain'); if (!t) return; try { const r = importCSV(t); const made = routinesFromHistory(); closeAllSheets(); render(); toast(`Imported ${r.n} workouts from ${r.fmt}${made ? `, created ${made} routine${made > 1 ? 's' : ''}` : ''}${r.created ? ` (${r.created} unknown exercises added as custom)` : ''}`, 4500, 'check'); } catch (e) { toast('Import failed: ' + e.message, 4000); } };
+A.repairImport = () => { const r = repairImported(); const made = routinesFromHistory(); render(); refreshSheet(); toast(r.linked || r.fixed || made ? `Linked ${r.linked} exercises to the library, fixed muscles on ${r.fixed}${made ? `, created ${made} routines` : ''}` : 'Everything already looks right', 4000, 'check'); };
 A.persist = async () => { try { const ok = navigator.storage?.persist ? await navigator.storage.persist() : false; toast(ok ? 'Storage is protected ✓' : 'The browser declined — installing to your Home Screen helps'); refreshSheet(); } catch (e) { toast('Not supported here'); } };
 A.loadDemo = () => confirmSheet('Load demo data?', 'Adds ~10 weeks of sample workouts, weigh-ins and an Upper/Lower plan to your existing data. You can erase it later with “Erase all data”.', 'Load demo', () => { loadDemo(); closeAllSheets(); go('home'); toast('Demo data loaded'); }, false);
 A.eraseAll = () => confirmSheet(`Erase ${esc(me().name)}'s data?`, 'All of this profile’s workouts, routines, body data and settings on this device will be permanently deleted. Other profiles are not affected. Back up first!', 'Erase all data', () => {
@@ -2679,6 +2804,11 @@ async function loadProfile(id) {
   S.plan = { days: {}, overrides: {}, ...S.plan };
   if (!S.meta.created) { S.meta.created = Date.now(); save('meta'); }
   ver++; _rec.clear(); holdTimer = null;
+  buildEx();
+  if (!S.meta.importFix2 && S.custom.some((c) => c.notes === 'Imported')) {
+    const r = repairImported(); const made = routinesFromHistory(); S.meta.importFix2 = Date.now(); save('meta');
+    if (r.linked || r.fixed || made) setTimeout(() => toast(`Improved your imported data: ${r.linked} exercises linked, ${r.fixed} muscle groups fixed${made ? `, ${made} routines created` : ''}`, 5000, 'check'), 900);
+  } else if (!S.meta.importFix2) { S.meta.importFix2 = Date.now(); save('meta'); }
   document.body.classList.remove('noprofile');
   sortW(); buildEx(); applyTheme(); closeAllSheets();
   if (location.hash !== '#home') location.hash = 'home'; else render();
@@ -2721,6 +2851,6 @@ async function boot() {
   // Ask for persistent storage once installed (iOS grants it to Home Screen apps).
   if (standalone() && navigator.storage?.persist) navigator.storage.persisted().then((p) => { if (!p) navigator.storage.persist(); }).catch(() => {});
 }
-window.__forge = { S, A, render, loadDemo, get PID() { return PID; }, get PROFILES() { return PROFILES; }, loadProfile, showPicker };
+window.__forge = { S, A, render, loadDemo, save, flush, matchLibrary, importCSV, routinesFromHistory, repairImported, muscleSets, getEx, get PID() { return PID; }, get PROFILES() { return PROFILES; }, loadProfile, showPicker };
 boot();
 })();
